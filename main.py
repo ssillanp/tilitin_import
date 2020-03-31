@@ -43,9 +43,26 @@ tapahtumaDescSarake = int(input('Sarake, jossa tapahtuman maksaja : '))
 
 
 print()
+DebetTili = 0
+KreditTili = 0
 for i, row in enumerate(csvData):
-   if i>0:
+   if i > 0:
        print("{}, {}, {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake]))
+       if float(row[tapahtumaDebitSarake]) > 0:
+           DebetTili = 1911
+           DebetTili = input(f"Anna Debet tili : [{DebetTili}]") or DebetTili
+           KreditTili = input(f"Anna Kredit tili : [{KreditTili}]")
+           print("{}, {}, {} , {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake], DebetTili))
+           print("{}, {}, {} , {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake], KreditTili))
+       else:
+           KreditTili = 1911
+           KreditTili=input(f"Anna Kredit tili : [{KreditTili}]") or KreditTili
+           DebetTili=input(f"Anna Debet tili : [{DebetTili}]")
+           print("{}, {}, {} , {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake], KreditTili))
+           print("{}, {}, {} , {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake], DebetTili))
+
+
+
 
 
 
