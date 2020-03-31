@@ -2,10 +2,9 @@ import sqlite3
 import csv
 import time
 import datetime
-from db_document import document
-from db_account import account
-from db_entry import entry
-from db_period import dbPeriod
+import dataBase
+
+
 
 
 svtk=sqlite3.connect('/home/sami/Documents/SVTK/svtk_test.sqlite')
