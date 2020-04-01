@@ -72,7 +72,8 @@ for i, row in enumerate(csvData):
            debit = False
        tapahtumaTili = input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
        vastaTili = input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
-       DocList.append(db.dbDocument(i*2, i-1, period, row[tapahtumaPvmSarake]))
+       ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[tapahtumaPvmSarake]}", '%m/%d/%y').timetuple())*1000)
+       DocList.append(db.dbDocument(i*2, i-1, period, ts_pvm))
        dbet = db.dbEntry(i, i*2, tapahtumaTili, int(debit), row[tapahtumaDebitSarake], row[tapahtumaDescSarake], 0, 0)
        dbev = db.dbEntry(i + 1, i*2, vastaTili, int(not debit), row[tapahtumaDebitSarake], row[tapahtumaDescSarake], 1, 0)
        DocList[i-1].add_entry(dbet)
