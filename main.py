@@ -23,7 +23,7 @@ validPeriods = []
 for y, itm in enumerate(r):
     periodsInDb.append(db.dbPeriod(tuple(itm)[0], tuple(itm)[1], tuple(itm)[2], tuple(itm)[3]))
     validPeriods.append(tuple(itm)[0])
-    print(periodsInDb[y].prepare_insert())
+    #print(periodsInDb[y].prepare_insert())
 
     # period = tuple(itm)[0]
     # StartDate = tuple(itm)[1]
