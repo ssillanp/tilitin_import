@@ -4,7 +4,16 @@ import time
 import datetime
 import dataBase as db
 
+def get_account_id(account_no):
+    sv.execute(f'SELECT id FROM account WHERE number = {acc_id}')
+    return sv.fetchone()
 
+def get_last_numbers():
+    sv.execute('SELECT id, number FROM document WHERE id=(SELECT max(id) FROM document)')
+    last_doc_id, last_doc_number = sv.fetchone()
+    sv.execute('SELECT id FROM entry WHERE id=(SELECT max(id) FROM entry)')
+    last_ent_id=sv.fetchone()[0]
+    return last_doc_id , last_doc_number, last_ent_id
 
 # Ava tiliote / tilitapahtuma .csv
 #todo nimi argumenttina
@@ -50,6 +59,7 @@ with open('/home/sami/Documents/SVTK/svtk.csv', newline='') as csvfile:
     for i, itm in enumerate(csvData[0]):
         print(f"[{i}]  {itm}")
 
+
 #csv sarakkeiden mäppäys
 tapahtumaPvmSarake = 0 #int(input('Sarake, jossa tapahtuman päivämäärä : '))
 tapahtumaDebitSarake = 2 #int(input('Sarake, jossa tapahtuman Debit : '))
@@ -83,9 +93,15 @@ for i, row in enumerate(csvData):
        print(DocList[i-1].entries[1].prepare_insert())
 
 
+for itm in get_last_numbers():
+    print(itm)
+
+svtk.close()
 
 print('The End!')
 
+def get_account_id(account_no):
+    sv.execute('SELECT id FROM account WHERE number = ')
 
 
 
