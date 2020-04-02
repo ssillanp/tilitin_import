@@ -5,8 +5,8 @@ import datetime
 import dataBase as db
 
 def get_account_id(account_no):
-    sv.execute(f'SELECT id FROM account WHERE number = {acc_id}')
-    return sv.fetchone()
+    sv.execute(f'SELECT id FROM account WHERE number = {account_no}')
+    return sv.fetchone()[0]
 
 def get_last_numbers():
     sv.execute('SELECT id, number FROM document WHERE id=(SELECT max(id) FROM document)')
@@ -68,7 +68,7 @@ tapahtumaDescSarake = 1 #int(input('Sarake, jossa tapahtuman maksaja : '))
 
 print()
 tapahtumaTili = 1911
-vastaTili = 2000
+vastaTili = 4101
 DocList = []
 
 for i, row in enumerate(csvData):
@@ -81,11 +81,13 @@ for i, row in enumerate(csvData):
        else:
            debit = False
        tapahtumaTili = input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
+       tapahtumaTiliId = get_account_id(tapahtumaTili)
        vastaTili = input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
+       vastaTiliId = get_account_id(vastaTili)
        ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[tapahtumaPvmSarake]}", '%m/%d/%y').timetuple())*1000)
        DocList.append(db.dbDocument(i*2, i-1, period, ts_pvm))
-       dbet = db.dbEntry(i, i*2, tapahtumaTili, int(debit), row[tapahtumaDebitSarake], row[tapahtumaDescSarake], 0, 0)
-       dbev = db.dbEntry(i + 1, i*2, vastaTili, int(not debit), row[tapahtumaDebitSarake], row[tapahtumaDescSarake], 1, 0)
+       dbet = db.dbEntry(i, i*2, tapahtumaTiliId, int(debit), abs(float((row[tapahtumaDebitSarake]))), row[tapahtumaDescSarake], 0, 0)
+       dbev = db.dbEntry(i + 1, i*2, vastaTiliId, int(not debit), abs(float(row[tapahtumaDebitSarake])), row[tapahtumaDescSarake], 1, 0)
        DocList[i-1].add_entry(dbet)
        print(DocList[i-1].prepare_insert())
        print(DocList[i-1].entries[0].prepare_insert())
