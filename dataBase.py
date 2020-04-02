@@ -21,7 +21,7 @@ class dbEntry:
         self.flags = flags
 
     def prepare_insert(self):
-        insertString="INSERT INTO {} VALUES ({}, {}, {}, {}, {}, {}, {}, {})".format("entry", self.id, self.document_id,
+        insertString="INSERT INTO entry VALUES ({}, {}, {}, {}, {}, {}, {}, {})".format(self.id, self.document_id,
                                                                                  self.account_id,  self.debit,
                                                                                  self.amount, self.description,
                                                                                  self.row_number, self.flags)
@@ -39,7 +39,7 @@ class dbDocument:
         self.entries.append(dbEntry)
 
     def prepare_insert(self):
-        insertString="INSERT INTO {} VALUES ({}, {}, {}, {})".format("document", self.id, self.number, self.period_id,
+        insertString="INSERT INTO document VALUES ({}, {}, {}, {})".format(self.id, self.number, self.period_id,
                                                                      self.doc_date)
         return insertString
 
@@ -51,7 +51,7 @@ class dbPeriod:
         self.locked = locked
 
     def prepare_insert(self):
-        insertString = "INSERT INTO {} VALUES ({}, {}, {}, {})".format("period", self.id, self.startDate, self.endDate,
+        insertString = "INSERT INTO period VALUES ({}, {}, {}, {})".format(self.id, self.startDate, self.endDate,
                                                                        self.locked)
         return insertString
 

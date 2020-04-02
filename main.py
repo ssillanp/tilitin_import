@@ -72,20 +72,31 @@ vastaTili = 4101
 DocList = []
 
 for i, row in enumerate(csvData):
+    # skipataan otsikkorivi
    if i == 0:
        pass
    else:
        print("{}, {}, {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake]))
+       # testataan onko vienti ulos vai sisään
        if float(row[tapahtumaDebitSarake]) > 0:
-           debit = True
+           debit = True #jos rahaa sisään debet tapahtumatilille
        else:
-           debit = False
+           debit = False #jos rahaa ulos kredit tapahtumatilille
+
        tapahtumaTili = input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
+       #Haetaan kannasta tilinumeroa vastaava id
        tapahtumaTiliId = get_account_id(tapahtumaTili)
+
        vastaTili = input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
+       # Haetaan kannasta tilinumeroa vastaava id
        vastaTiliId = get_account_id(vastaTili)
+
+       #muokataan tapahtuman päivämäärä oikeaan muotoon
        ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[tapahtumaPvmSarake]}", '%m/%d/%y').timetuple())*1000)
+
+       #Lisätää Doclist listaan tapahtuman dokumentti (class document)
        DocList.append(db.dbDocument(i*2, i-1, period, ts_pvm))
+       #lisätään Doclist dokumentille tapahtuman entryt (class docmument.entries class entry)
        dbet = db.dbEntry(i, i*2, tapahtumaTiliId, int(debit), abs(float((row[tapahtumaDebitSarake]))), row[tapahtumaDescSarake], 0, 0)
        dbev = db.dbEntry(i + 1, i*2, vastaTiliId, int(not debit), abs(float(row[tapahtumaDebitSarake])), row[tapahtumaDescSarake], 1, 0)
        DocList[i-1].add_entry(dbet)
