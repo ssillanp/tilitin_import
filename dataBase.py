@@ -21,7 +21,7 @@ class dbEntry:
         self.flags = flags
 
     def prepare_insert(self):
-        insertString="INSERT INTO entry VALUES ({}, {}, {}, {}, {}, {}, {}, {})".format(self.id, self.document_id,
+        insertString="INSERT INTO entry VALUES ({}, {}, {}, {}, {}, '{}', {}, {})".format(self.id, self.document_id,
                                                                                  self.account_id,  self.debit,
                                                                                  self.amount, self.description,
                                                                                  self.row_number, self.flags)
