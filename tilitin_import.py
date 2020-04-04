@@ -128,6 +128,7 @@ print(LastDocId)
 print(LastDocNum)
 print(LastEntId)
 
+# Luetaan tapahtumat csv sisään ja lisätään DocList-listaan.
 for i, row in enumerate(csvData):
     # skipataan otsikkorivi
     if i == 0:
@@ -155,39 +156,40 @@ for i, row in enumerate(csvData):
         # Lisätää Doclist listaan tapahtuman dokumentti (class document)
         DocList.append(db.dbDocument(LastDocId + i, LastDocNum + i, period, ts_pvm))
         # lisätään Doclist dokumentille tapahtuman entryt (class document.entries class entry)
-        print(i)
-        dbet=db.dbEntry(LastEntId + i * 2 - 1, LastDocId + i, tapahtumaTiliId, debit,row[tapahtumaDebitSarake],
-                        row[tapahtumaDescSarake], 0, 0)
-        dbev=db.dbEntry(LastEntId + i * 2, LastDocId + i, vastaTiliId, not debit,row[tapahtumaDebitSarake],
-                        row[tapahtumaDescSarake], 1, 0)
-        DocList[i - 1].add_entry(dbet)
-        DocList[i - 1].add_entry(dbev)
+        DocList[-1].add_entry(
+            db.dbEntry(LastEntId + i * 2 - 1, LastDocId + i, tapahtumaTiliId, debit, row[bank.get('sumcol')],
+                       row[bank.get('descol')], 0, 0))
+        DocList[-1].add_entry(
+            db.dbEntry(LastEntId + i * 2, LastDocId + i, vastaTiliId, not debit, row[bank.get('sumcol')],
+                       row[bank.get('descol')], 1, 0))
+
+# tulostetaan SQL rivit näytölle tarkastamista varten
 
 for itm in DocList:
     print(itm.prepare_insert())
-    print(itm.entries[0].prepare_insert())
-    print(itm.entries[1].prepare_insert())
+    for ent in itm.entries:
+        print(ent.prepare_insert())
+
+# Varmistetaan kirjoitus kantaan
 kirjoitus = input("Yllä olevat rivit lisätään kantaan Y/N : ")
+
+# Lisätään rivit kantaan
 if kirjoitus == "y" or kirjoitus == "Y":
-    print('kiroitetaan')
+    print('kirjoitetaan ', end='')
     for itm in DocList:
         sv.execute(itm.prepare_insert())
-        sv.execute(itm.entries[0].prepare_insert())
-        sv.execute(itm.entries[1].prepare_insert())
-        svtk.commit()
+        for ent in itm.entries:
+            sv.execute(ent.prepare_insert())
+        print(".", end='')
+        time.sleep(0.2)
+    svtk.commit()
+    print()
 else:
     print('lopetetaan')
     sys.exit()
 
-
-
-
 svtk.close()
 
-print('The End!')
 
-
-def get_account_id(account_no):
-    sv.execute('SELECT id FROM account WHERE number = ')
 
 # with open('/home/sami/Documents/SVTK/svtk.csv') as csvfile:
