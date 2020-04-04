@@ -21,9 +21,6 @@ def get_account_id(account_no):
     return sv.fetchone()[0]
 
 
-# SELECT number FROM document WHERE number=(SELECT max(number) FROM document WHERE period_id = 4)
-# SELECT id FROM document WHERE id=(SELECT max(id) FROM document WHERE period_id = 4)
-
 def get_last_dbIndexes(period):
     """Funktio lukee kannasta annetun (period) tilikauden viimeisimmät id:nrot """
     sv.execute('SELECT max(id) FROM document')
@@ -46,6 +43,7 @@ print(f'Tietokannassa \033[1;33;48m{dbName.split("/")[-1]}\033[1;37;48m on tilik
 print()
 periodsInDb=[]
 validPeriods=[]
+
 for y, itm in enumerate(r):
     periodsInDb.append(db.dbPeriod(tuple(itm)[0], tuple(itm)[1], tuple(itm)[2], tuple(itm)[3]))
     validPeriods.append(tuple(itm)[0])
@@ -56,18 +54,19 @@ for y, itm in enumerate(r):
                                             periodsInDb[y].locked))
 
 print()
-period=int(input("Valitse käytettävä tilikausi: "))
-# Testi että valittu tk on ok.
-periodOk=False
-while periodOk == False:
-    # Onko tk olemassa
-    if validPeriods.count(period) != 1:
-        period=int(input(f"{period} ei ole validi, Valitse käytettävä tilikausi: "))
-    # onko tk lukittu
-    elif periodsInDb[validPeriods.index(period, 0, len(validPeriods))].locked != 0:
-        period=int(input(f"{period} on lukittu, valitse toinen tilikausi: "))
-    else:
-        periodOk=True
+
+while True:
+    try:
+        period = int(input("anna tilikausi: "))
+        if validPeriods.count(period) != 1 or periodsInDb[validPeriods.index(period, 0, len(validPeriods))].locked != 0:
+            print(f"{period} ei ole validi tai on lukittu ", end='')
+            continue
+        else:
+            break
+    except:
+        print("Syöttämäsi arvo ei kelpaa")
+        continue
+
 
 print(f'Valittu tilikausi \033[1;33;48m{period}\033[1;37;48m')
 
