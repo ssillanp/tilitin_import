@@ -11,14 +11,14 @@ class DataBase:
 
 class dbEntry:
     def __init__(self, id, document_id, account_id, debit, amount, description, row_number, flags):
-        self.id = id
-        self.document_id = document_id
-        self.account_id = account_id
-        self.debit = debit
-        self.amount = amount
+        self.id = int(id)
+        self.document_id = int(document_id)
+        self.account_id = int(account_id)
+        self.debit = int(debit)
+        self.amount = abs(float(amount.replace(',', '.').replace(' ', '').strip()))
         self.description = description
-        self.row_number = row_number
-        self.flags = flags
+        self.row_number = int(row_number)
+        self.flags = int(flags)
 
     def prepare_insert(self):
         insertString="INSERT INTO entry VALUES ({}, {}, {}, {}, {}, '{}', {}, {})".format(self.id, self.document_id,

@@ -11,7 +11,7 @@ if len(args)==2:
     dbName = str(args[0])
     csvName = str(args[1])
 else:
-    print("Usage: python3 main.py [database] [csv]")
+    print("Usage: python3 tilitin_import.py [database] [csv]")
     sys.exit()
 
 def get_account_id(account_no):
@@ -137,7 +137,8 @@ for i, row in enumerate(csvData):
     else:
         print("{}, {}, {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake]))
         # testataan onko vienti ulos vai sisään
-        if float(row[tapahtumaDebitSarake].strip().replace(',', '.').replace(' ', '')) > 0:
+        # if float(row[tapahtumaDebitSarake].strip().replace(',', '.').replace(' ', '')) > 0:
+        if str(row[tapahtumaDebitSarake]).find("-")>=0:
             debit=True  # jos rahaa sisään debet tapahtumatilille
         else:
             debit=False  # jos rahaa ulos kredit tapahtumatilille
@@ -157,11 +158,9 @@ for i, row in enumerate(csvData):
         DocList.append(db.dbDocument(LastDocId + i, LastDocNum + i, period, ts_pvm))
         # lisätään Doclist dokumentille tapahtuman entryt (class document.entries class entry)
         print(i)
-        dbet=db.dbEntry(LastEntId + i * 2 - 1, LastDocId + i, tapahtumaTiliId, int(debit),
-                        abs(float((row[tapahtumaDebitSarake].replace(',', '.').replace(' ', '').strip()))),
+        dbet=db.dbEntry(LastEntId + i * 2 - 1, LastDocId + i, tapahtumaTiliId, debit,row[tapahtumaDebitSarake],
                         row[tapahtumaDescSarake], 0, 0)
-        dbev=db.dbEntry(LastEntId + i * 2, LastDocId + i, vastaTiliId, int(not debit),
-                        abs(float(row[tapahtumaDebitSarake].replace(',', '.').replace(' ', '').strip())),
+        dbev=db.dbEntry(LastEntId + i * 2, LastDocId + i, vastaTiliId, not debit,row[tapahtumaDebitSarake],
                         row[tapahtumaDescSarake], 1, 0)
         DocList[i - 1].add_entry(dbet)
         DocList[i - 1].add_entry(dbev)
