@@ -3,6 +3,7 @@ import csv
 import time
 import datetime
 import dataBase as db
+from bankCSV import bankinfo
 import sys
 import codecs
 
@@ -77,37 +78,33 @@ print("[2] - Danske Bank")
 print("[9] - Lopeta")
 print()
 
-bankOk=False
-tmFormat=""
-dlmtr= ","
-tapahtumaPvmSarake=0
-tapahtumaDebitSarake=0
-tapahtumaDescSarake=0
+# bankOk=False
+# tmFormat=""
+# dlmtr= ","
+# tapahtumaPvmSarake=0
+# tapahtumaDebitSarake=0
+# tapahtumaDescSarake=0
 
-bank=int(input("Valitse: "))
-while bankOk == False:
-    if bank == 1:
-        dlmtr=";"
-        tapahtumaPvmSarake=0
-        tapahtumaDebitSarake=2
-        tapahtumaDescSarake=5
-        bankOk=True
-        tmFormat='%d.%m.%Y'
-    elif bank == 2:
-        dlmtr=","
-        tapahtumaPvmSarake=0
-        tapahtumaDebitSarake=2
-        tapahtumaDescSarake=1
-        bankOk=True
-        tmFormat='%d.%m.%Y'
-    elif bank == 9:
-        print("Lopetetaan")
-        sys.exit()
+bi = bankinfo()
+
+while True:
+    try:
+        bank=int(input("valitse: "))
+        if bank == 1:
+            bank = bi.op
+        elif bank == 2:
+            bank = bi.danske
+        elif bank == 9:
+            print("Lopetetaan")
+            sys.exit()
+    except:
+        print(' Antamasi arvo ei ole validi ')
+        continue
     else:
-        bank=int(input(f"{bank} ei ole validi, valitse: "))
+        break
 
 with codecs.open(csvName, encoding='unicode_escape') as csvfile:
-    reader=csv.reader(csvfile, delimiter=dlmtr)
+    reader=csv.reader(csvfile, delimiter=bank.get('delimiter'))
     csvData=list(reader)
     print(f"Löytyi {len(csvData[0])} Saraketta")
     print()
@@ -115,7 +112,6 @@ with codecs.open(csvName, encoding='unicode_escape') as csvfile:
         print(f"[{i}]  {itm}")
 
 # csv sarakkeiden mäppäys
-
 
 print()
 tapahtumaTili=1911
@@ -134,10 +130,10 @@ for i, row in enumerate(csvData):
     if i == 0:
         pass
     else:
-        print("{}, {}, {}".format(row[tapahtumaPvmSarake], row[tapahtumaDebitSarake], row[tapahtumaDescSarake]))
+        print("{}, {}, {}".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
         # testataan onko vienti ulos vai sisään
         # if float(row[tapahtumaDebitSarake].strip().replace(',', '.').replace(' ', '')) > 0:
-        if str(row[tapahtumaDebitSarake]).find("-")>=0:
+        if str(row[bank.get('sumcol')]).find("-")>=0:
             debit=True  # jos rahaa sisään debet tapahtumatilille
         else:
             debit=False  # jos rahaa ulos kredit tapahtumatilille
@@ -151,7 +147,8 @@ for i, row in enumerate(csvData):
         vastaTiliId=get_account_id(vastaTili)
 
         # muokataan tapahtuman päivämäärä oikeaan muotoon
-        ts_pvm=int(time.mktime(datetime.datetime.strptime(f"{row[tapahtumaPvmSarake]}", tmFormat).timetuple()) * 1000)
+        ts_pvm=int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
+                               .timetuple()) * 1000)
 
         # Lisätää Doclist listaan tapahtuman dokumentti (class document)
         DocList.append(db.dbDocument(LastDocId + i, LastDocNum + i, period, ts_pvm))
