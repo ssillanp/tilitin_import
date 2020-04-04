@@ -7,13 +7,14 @@ from bankCSV import bankinfo
 import sys
 import codecs
 
-args = sys.argv[1:]
-if len(args)==2:
-    dbName = str(args[0])
-    csvName = str(args[1])
+args=sys.argv[1:]
+if len(args) == 2:
+    dbName=str(args[0])
+    csvName=str(args[1])
 else:
     print("Usage: python3 tilitin_import.py [database] [csv]")
     sys.exit()
+
 
 def get_account_id(account_no):
     """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
@@ -57,7 +58,7 @@ print()
 
 while True:
     try:
-        period = int(input("anna tilikausi: "))
+        period=int(input("anna tilikausi: "))
         if validPeriods.count(period) != 1 or periodsInDb[validPeriods.index(period, 0, len(validPeriods))].locked != 0:
             print(f"{period} ei ole validi tai on lukittu ", end='')
             continue
@@ -67,37 +68,36 @@ while True:
         print("Syöttämäsi arvo ei kelpaa")
         continue
 
-
 print(f'Valittu tilikausi \033[1;33;48m{period}\033[1;37;48m')
 
 print("Valitse tapahtumaluettelon (.csv) malli")
 print()
 print("[1] - Osuuspankki")
 print("[2] - Danske Bank")
+print("[3] - Nodrea (ei käytössä vielä)")
+print("[4] - Määrittele itse")
 print("[9] - Lopeta")
 print()
 
-# bankOk=False
-# tmFormat=""
-# dlmtr= ","
-# tapahtumaPvmSarake=0
-# tapahtumaDebitSarake=0
-# tapahtumaDescSarake=0
-
-bi = bankinfo()
+bi=bankinfo()
 
 while True:
     try:
         bank=int(input("valitse: "))
         if bank == 1:
-            bank = bi.op
+            bank=bi.op
         elif bank == 2:
-            bank = bi.danske
+            bank=bi.danske
+        elif bank == 4:
+            bank = bi.user_defined()
         elif bank == 9:
             print("Lopetetaan")
             sys.exit()
+        else:
+            print('Antamasi arvo ei ole validi ')
+            continue
     except:
-        print(' Antamasi arvo ei ole validi ')
+        print('Antamasi arvo ei ole validi ')
         continue
     else:
         break
@@ -132,7 +132,7 @@ for i, row in enumerate(csvData):
         print("{}, {}, {}".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
         # testataan onko vienti ulos vai sisään
         # if float(row[tapahtumaDebitSarake].strip().replace(',', '.').replace(' ', '')) > 0:
-        if str(row[bank.get('sumcol')]).find("-")>=0:
+        if str(row[bank.get('sumcol')]).find("-") >= 0:
             debit=True  # jos rahaa sisään debet tapahtumatilille
         else:
             debit=False  # jos rahaa ulos kredit tapahtumatilille
@@ -167,7 +167,7 @@ for itm in DocList:
         print(ent.prepare_insert())
 
 # Varmistetaan kirjoitus kantaan
-kirjoitus = input("Yllä olevat rivit lisätään kantaan Y/N : ")
+kirjoitus=input("Yllä olevat rivit lisätään kantaan Y/N : ")
 
 # Lisätään rivit kantaan
 if kirjoitus == "y" or kirjoitus == "Y":
@@ -185,7 +185,5 @@ else:
     sys.exit()
 
 svtk.close()
-
-
 
 # with open('/home/sami/Documents/SVTK/svtk.csv') as csvfile:

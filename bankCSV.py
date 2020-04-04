@@ -24,3 +24,18 @@ class bankinfo:
         #     'sumcol': 1,
         #     'descol': 5
         # }
+
+    def user_defined(self):
+        delimiter = input("Kenttäerotin: ")
+        timeformat = input("Timeformat: ")
+        datecolumn = int(input("Päivämäärän sarake: "))
+        sumcolumn = int(input("Summan sarake: "))
+        desc_column = int(input("Kuvauksen sarake: "))
+        self.user = {
+            'delimiter': delimiter,
+            'timeformat': timeformat,
+            'datecol': datecolumn,
+            'sumcol': sumcolumn,
+            'descol': desc_column
+        }
+        return self.user
