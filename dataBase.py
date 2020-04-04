@@ -29,9 +29,9 @@ class dbEntry:
 
 class dbDocument:
     def __init__(self, id, number, period_id, doc_date):
-        self.id = id
-        self.number = number
-        self.period_id = period_id
+        self.id = int(id)
+        self.number = int(number)
+        self.period_id = int(period_id)
         self.doc_date = doc_date
         self.entries = []
 
@@ -45,10 +45,10 @@ class dbDocument:
 
 class dbPeriod:
     def __init__(self, id, startDate, endDate, locked):
-        self.id = id
+        self.id = int(id)
         self.startDate = startDate
         self.endDate = endDate
-        self.locked = locked
+        self.locked = int(locked)
 
     def prepare_insert(self):
         insertString = "INSERT INTO period VALUES ({}, {}, {}, {})".format(self.id, self.startDate, self.endDate,

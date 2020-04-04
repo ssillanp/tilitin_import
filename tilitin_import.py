@@ -22,7 +22,7 @@ def get_account_id(account_no):
 # SELECT number FROM document WHERE number=(SELECT max(number) FROM document WHERE period_id = 4)
 # SELECT id FROM document WHERE id=(SELECT max(id) FROM document WHERE period_id = 4)
 
-def get_last_numbers(period):
+def get_last_dbIndexes(period):
     sv.execute('SELECT max(id) FROM document')
     last_doc_id=sv.fetchone()[0]
     sv.execute(f'SELECT max(number) FROM document WHERE period_id = {period}')
@@ -33,9 +33,6 @@ def get_last_numbers(period):
 
 
 # Ava tiliote / tilitapahtuma .csv
-# todo nimi argumenttina
-# todo csv mallit eri pankeille
-# todo mmerkistökoodus
 # tämä malli dansken tapahtuma csv
 svtk=sqlite3.connect(dbName)
 svtk.row_factory=sqlite3.Row
@@ -123,9 +120,9 @@ print()
 tapahtumaTili=1911
 vastaTili=4101
 DocList=[]
-LastDocId=get_last_numbers(period)[0]
-LastDocNum=get_last_numbers(period)[1]
-LastEntId=get_last_numbers(period)[2]
+LastDocId=get_last_dbIndexes(period)[0]
+LastDocNum=get_last_dbIndexes(period)[1]
+LastEntId=get_last_dbIndexes(period)[2]
 print(LastDocId)
 print(LastDocNum)
 print(LastEntId)
