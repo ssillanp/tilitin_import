@@ -15,6 +15,7 @@ else:
     sys.exit()
 
 def get_account_id(account_no):
+    """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
     sv.execute(f'SELECT id FROM account WHERE number = {account_no}')
     return sv.fetchone()[0]
 
@@ -23,6 +24,7 @@ def get_account_id(account_no):
 # SELECT id FROM document WHERE id=(SELECT max(id) FROM document WHERE period_id = 4)
 
 def get_last_dbIndexes(period):
+    """Funktio lukee kannasta annetun (period) tilikauden viimeisimmät id:nrot """
     sv.execute('SELECT max(id) FROM document')
     last_doc_id=sv.fetchone()[0]
     sv.execute(f'SELECT max(number) FROM document WHERE period_id = {period}')
@@ -32,8 +34,7 @@ def get_last_dbIndexes(period):
     return last_doc_id, last_doc_number, last_ent_id
 
 
-# Ava tiliote / tilitapahtuma .csv
-# tämä malli dansken tapahtuma csv
+# Luetaan kannasta tilikausien määrä ja ajat
 svtk=sqlite3.connect(dbName)
 svtk.row_factory=sqlite3.Row
 sv=svtk.cursor()
