@@ -1,5 +1,5 @@
 class bankinfo:
-    """Luokka pankkikohtaisille astuksille"""
+    """Luokka pankkikohtaisille asetuksille"""
     def __init__(self):
         self.op = {
             'delimiter': ';',
@@ -26,6 +26,7 @@ class bankinfo:
         # }
 
     def user_defined(self):
+        """Käyttäjän vapaasti määriteltävät pankki-csv asetukset"""
         delimiter = input("Kenttäerotin: ")
         timeformat = input("Timeformat: ")
         datecolumn = int(input("Päivämäärän sarake: "))
