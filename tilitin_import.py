@@ -127,7 +127,7 @@ for i, row in enumerate(csvData):
     if i == 0:
         pass
     else:
-        print("{}, {}, {}".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
+        print("{}, {}, {} ".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
         # testataan onko vienti ulos vai sisään
         # if float(row[tapahtumaDebitSarake].strip().replace(',', '.').replace(' ', '')) > 0:
         if str(row[bank.get('sumcol')]).find("-") >= 0:
