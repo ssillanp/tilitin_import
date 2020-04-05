@@ -11,6 +11,7 @@ from bankinfo import bankinfo
 
 os.system('clear')
 
+# Kanta ja csv argumentteina
 args = sys.argv[1:]
 if len(args) == 2:
     dbName = str(args[0])
@@ -36,11 +37,12 @@ def get_last_dbIndexes(period):
     last_ent_id = sv.fetchone()[0]
     return last_doc_id, last_doc_number, last_ent_id
 
-
-# Luetaan kannasta tilikausien määrä ja ajat
+# Yhdistetään kantaan
 svtk = sqlite3.connect(dbName)
 svtk.row_factory = sqlite3.Row
 sv = svtk.cursor()
+
+# Luetaan kannasta tilikausien määrä ja ajat
 sv.execute('SELECT * FROM period')
 r = sv.fetchall()
 print(f'Tietokannassa \033[1;33;48m{dbName.split("/")[-1]}\033[1;37;48m on tilikausia '
