@@ -6,6 +6,8 @@ Python skripti pankin csv-muotoisen tapahhtumaluettelon lisäämiseki tilitin-ka
 HUOM!
 Luo kannasta kopio, ennen kuin käytät. Kaikki vastuu mahdollisista virheistä ja tietojen hukkaamisista käyttäjällä
 
+Testattu python 3.7. Ei toimi python 2.x tai vanhemmilla
+
 Käyttö
 >python3 tilitin_import.py [tilitin_kanta.sqlite] [pankki.csv]
 

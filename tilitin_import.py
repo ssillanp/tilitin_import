@@ -38,7 +38,7 @@ def get_last_dbIndexes(period):
 svtk = sqlite3.connect(dbName)
 svtk.row_factory = sqlite3.Row
 sv = svtk.cursor()
-sv.execute('SELECT * FROM period')  # ORDER BY id DESC')
+sv.execute('SELECT * FROM period')
 r = sv.fetchall()
 print(f'Tietokannassa \033[1;33;48m{dbName.split("/")[-1]}\033[1;37;48m on tilikausia '
       f'\033[1;33;48m{len(r)}\033[1;37;48m'f' kappaletta')
