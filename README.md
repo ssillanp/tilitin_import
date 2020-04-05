@@ -7,8 +7,8 @@ HUOM!
 Luo kannasta kopio, ennen kuin käytät. Kaikki vastuu mahdollisista virheistä ja tietojen hukkaamisista käyttäjällä
 
 Testattu python 3.7. Ei toimi python 2.x tai vanhemmilla
-Pankkimallit OP ja Danske
-Lisäksi csv:n mallin voi syöttää käsin.
+
+Pankkimallit OP ja Danske, lisäksi csv:n mallin voi syöttää käsin.
 
 Käyttö
 >python3 tilitin_import.py [tilitin_kanta.sqlite] [pankki.csv]
