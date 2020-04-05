@@ -152,7 +152,7 @@ for i, row in enumerate(csvData):
         # Testataan että tapahtuma ajoittuu tilikaudelle, jos ei skipataan
         if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[
             validPeriods.index(period)].endDate:
-            print("\033[1;31;48mVienti ei ole annetulla tilikaudella\033[1;37;48m")
+            print("\033[1;31;48mVienti ei ole annetulla tilikaudella, skipataan...\033[1;37;48m")
             continue
 
         # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
