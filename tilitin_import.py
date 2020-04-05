@@ -6,7 +6,7 @@ import sys
 import time
 
 import dataBase as db
-from bankCSV import bankinfo
+from bankinfo import bankinfo
 
 args = sys.argv[1:]
 if len(args) == 2:
