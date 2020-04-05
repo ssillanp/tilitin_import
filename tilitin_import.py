@@ -79,7 +79,6 @@ print("[1] - Osuuspankki")
 print("[2] - Danske Bank")
 print("[3] - Nodrea (ei käytössä vielä)")
 print("[4] - Määrittele itse")
-print("[9] - Lopeta")
 print("\033[1;37;48m")
 
 bi = bankinfo()
@@ -93,9 +92,6 @@ while True:
             bank = bi.danske
         elif bank == 4:
             bank = bi.user_defined()
-        elif bank == 9:
-            print("Lopetetaan")
-            sys.exit()
         else:
             print('Antamasi arvo ei ole validi ')
             continue
