@@ -49,13 +49,13 @@ validPeriods=[]
 for y, itm in enumerate(r):
     periodsInDb.append(db.dbPeriod(tuple(itm)[0], tuple(itm)[1], tuple(itm)[2], tuple(itm)[3]))
     validPeriods.append(tuple(itm)[0])
-    print("[{}] {} - {} Lukittu: {}".format(periodsInDb[y].id, datetime.datetime
+    print("\033[1;33;48m[{}] {} - {} Lukittu: {}".format(periodsInDb[y].id, datetime.datetime
                                             .utcfromtimestamp(periodsInDb[y].startDate / 1000)
                                             .strftime("%d.%m.%Y"), datetime.datetime.
                                             utcfromtimestamp(periodsInDb[y].endDate / 1000).strftime("%d.%m.%Y"),
                                             periodsInDb[y].locked))
 
-print()
+print("\033[1;37;48m")
 
 while True:
     try:
@@ -74,13 +74,13 @@ while True:
 print(f'Valittu tilikausi \033[1;33;48m{period}\033[1;37;48m')
 
 print("Valitse tapahtumaluettelon (.csv) malli")
-print()
+print("\033[1;33;48m")
 print("[1] - Osuuspankki")
 print("[2] - Danske Bank")
 print("[3] - Nodrea (ei käytössä vielä)")
 print("[4] - Määrittele itse")
 print("[9] - Lopeta")
-print()
+print("\033[1;37;48m")
 
 bi = bankinfo()
 
@@ -111,13 +111,13 @@ with codecs.open(csvName, encoding='unicode_escape') as csvfile:
     reader = csv.reader(csvfile, delimiter = bank.get('delimiter'))
     csvData = list(reader)
     print(f"Löytyi {len(csvData[0])} Saraketta")
-    print()
+    print("\033[1;33;48m")
     for i, itm in enumerate(csvData[0]):
         print(f"[{i}]  {itm}")
 
-# csv sarakkeiden mäppäys
 
-print()
+# csv sarakkeiden mäppäys
+print("\033[1;37;48m")
 tapahtumaTili = 0000
 vastaTili = 0000
 DocList=[]
@@ -131,15 +131,15 @@ for i, row in enumerate(csvData):
     if i == 0:
         pass
     else:
-        print("{}, {}, {} ".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
+        print("\033[1;34;48m{}, {}, {} \033[1;37;48m".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
         # testataan onko vienti ulos vai sisään
-        # if float(row[tapahtumaDebitSarake].strip().replace(',', '.').replace(' ', '')) > 0:
         if str(row[bank.get('sumcol')]).find("-") >= 0:
             debit = True  # jos rahaa sisään debet tapahtumatilille
         else:
             debit = False  # jos rahaa ulos kredit tapahtumatilille
 
         # muokataan tapahtuman päivämäärä oikeaan muotoon
+        # Huom. Kannassa ajan esitys muodossa int(timestamp*1000)
         try:
             ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
                                .timetuple()) * 1000)
@@ -149,16 +149,16 @@ for i, row in enumerate(csvData):
             print(f"Tiedoston {csvName.split('/')[-1]} timeformat muoto ei ole pankkimallin mukainen {bank.get('timeformat')}")
             print("lopetetaan...")
             sys.exit()
-
+        # Testataan että tapahtuma ajoittuu tilikaudelle, jos ei skipataan
         if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[
             validPeriods.index(period)].endDate:
-            print("Vienti ei ole annetulla tilikaudella")
+            print("\033[1;31;48mVienti ei ole annetulla tilikaudella\033[1;37;48m")
             continue
 
         # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
         while True:
             try:
-                tapahtumaTili = input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
+                tapahtumaTili = input(f'Syötä tapahtumatili [\033[1;32;48m{tapahtumaTili}\033[1;37;48m]: ') or tapahtumaTili
                 # Haetaan kannasta tilinumeroa vastaava id
                 tapahtumaTiliId = get_account_id(tapahtumaTili)
             except KeyboardInterrupt:
@@ -172,7 +172,7 @@ for i, row in enumerate(csvData):
         # pyydetään tapahtumalle vastatili ja testataan että annettu tili on kannassa
         while True:
             try:
-                vastaTili = input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
+                vastaTili = input(f'Syötä vastatili [\033[1;32;48m{vastaTili}\033[1;37;48m]: ') or vastaTili
                 # Haetaan kannasta tilinumeroa vastaava id
                 vastaTiliId = get_account_id(vastaTili)
             except KeyboardInterrupt:
@@ -196,16 +196,18 @@ for i, row in enumerate(csvData):
 # tulostetaan SQL rivit näytölle tarkastamista varten
 
 for itm in DocList:
+    print("\033[1;31;48m")
     print(itm.prepare_insert())
     for ent in itm.entries:
         print(ent.prepare_insert())
+print("\033[1;37;48m")
 
 # Varmistetaan kirjoitus kantaan
 kirjoitus = input("Yllä olevat rivit lisätään kantaan Y/N : ")
 
 # Lisätään rivit kantaan
 if kirjoitus == "y" or kirjoitus == "Y":
-    print('kirjoitetaan ', end='')
+    print('\033[1;33;48mkirjoitetaan', end='')
     for itm in DocList:
         sv.execute(itm.prepare_insert())
         for ent in itm.entries:
@@ -215,7 +217,7 @@ if kirjoitus == "y" or kirjoitus == "Y":
     svtk.commit()
     print()
 else:
-    print('lopetetaan')
+    print('lopetetaan\033[1;37;48m')
     sys.exit()
 
 svtk.close()
