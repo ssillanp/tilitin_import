@@ -6,7 +6,7 @@ import sys
 import time
 import os
 
-import dataBase as db
+import tilitindb as db
 from bankinfo import bankinfo
 
 os.system('clear')
