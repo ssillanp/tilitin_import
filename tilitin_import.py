@@ -59,15 +59,17 @@ print()
 
 while True:
     try:
-        period = int(input("anna tilikausi: "))
+        period = int(input("Anna tilikausi: "))
         if validPeriods.count(period) != 1 or periodsInDb[validPeriods.index(period, 0, len(validPeriods))].locked != 0:
-            print(f"{period} ei ole validi tai on lukittu ", end='')
+            print(f"{period} ei ole validi tai on lukittu")
             continue
-        else:
-            break
+    except KeyboardInterrupt:
+        raise
     except:
         print("Syöttämäsi arvo ei kelpaa")
         continue
+    else:
+        break
 
 print(f'Valittu tilikausi \033[1;33;48m{period}\033[1;37;48m')
 
@@ -97,6 +99,8 @@ while True:
         else:
             print('Antamasi arvo ei ole validi ')
             continue
+    except KeyboardInterrupt:
+        raise
     except:
         print('Antamasi arvo ei ole validi ')
         continue
@@ -136,8 +140,16 @@ for i, row in enumerate(csvData):
             debit = False  # jos rahaa ulos kredit tapahtumatilille
 
         # muokataan tapahtuman päivämäärä oikeaan muotoon
-        ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
+        try:
+            ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
                                .timetuple()) * 1000)
+        except KeyboardInterrupt:
+            raise
+        except:
+            print(f"Tiedoston {csvName.split('/')[-1]} timeformat muoto ei ole pankkimallin mukainen {bank.get('timeformat')}")
+            print("lopetetaan...")
+            sys.exit()
+
         if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[
             validPeriods.index(period)].endDate:
             print("Vienti ei ole annetulla tilikaudella")
@@ -149,6 +161,8 @@ for i, row in enumerate(csvData):
                 tapahtumaTili = input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
                 # Haetaan kannasta tilinumeroa vastaava id
                 tapahtumaTiliId = get_account_id(tapahtumaTili)
+            except KeyboardInterrupt:
+                raise
             except:
                 print('Syöttämäsi tilinumero ei kelpaa')
                 continue
@@ -161,6 +175,8 @@ for i, row in enumerate(csvData):
                 vastaTili = input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
                 # Haetaan kannasta tilinumeroa vastaava id
                 vastaTiliId = get_account_id(vastaTili)
+            except KeyboardInterrupt:
+                raise
             except:
                 print('Syöttämäsi tilinumero ei kelpaa')
                 continue
