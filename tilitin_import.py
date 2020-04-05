@@ -4,9 +4,12 @@ import datetime
 import sqlite3
 import sys
 import time
+import os
 
 import dataBase as db
 from bankinfo import bankinfo
+
+os.system('clear')
 
 args = sys.argv[1:]
 if len(args) == 2:
@@ -190,16 +193,19 @@ for i, row in enumerate(csvData):
                        row[bank.get('descol')], 1, 0))
 
 # tulostetaan SQL rivit näytölle tarkastamista varten
+os.system('clear')
+
+print("\033[1;32;48mKirjoitetaan seuraavat tapahtumat kantaan:")
 
 for itm in DocList:
-    print("\033[1;31;48m")
+    print("------------------------------------------------------")
     print(itm.prepare_insert())
     for ent in itm.entries:
         print(ent.prepare_insert())
 print("\033[1;37;48m")
 
 # Varmistetaan kirjoitus kantaan
-kirjoitus = input("Yllä olevat rivit lisätään kantaan Y/N : ")
+kirjoitus = input("Kirjoita Y/N : ")
 
 # Lisätään rivit kantaan
 if kirjoitus == "y" or kirjoitus == "Y":
