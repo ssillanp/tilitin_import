@@ -113,15 +113,13 @@ with codecs.open(csvName, encoding='unicode_escape') as csvfile:
 # csv sarakkeiden mäppäys
 
 print()
-tapahtumaTili=1911
-vastaTili=4101
+tapahtumaTili=0000
+vastaTili=0000
 DocList=[]
 LastDocId=get_last_dbIndexes(period)[0]
 LastDocNum=get_last_dbIndexes(period)[1]
 LastEntId=get_last_dbIndexes(period)[2]
-print(LastDocId)
-print(LastDocNum)
-print(LastEntId)
+
 
 # Luetaan tapahtumat csv sisään ja lisätään DocList-listaan.
 for i, row in enumerate(csvData):
@@ -137,17 +135,35 @@ for i, row in enumerate(csvData):
         else:
             debit=False  # jos rahaa ulos kredit tapahtumatilille
 
-        tapahtumaTili=input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
-        # Haetaan kannasta tilinumeroa vastaava id
-        tapahtumaTiliId=get_account_id(tapahtumaTili)
-
-        vastaTili=input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
-        # Haetaan kannasta tilinumeroa vastaava id
-        vastaTiliId=get_account_id(vastaTili)
-
         # muokataan tapahtuman päivämäärä oikeaan muotoon
         ts_pvm=int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
                                .timetuple()) * 1000)
+        if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[validPeriods.index(period)].endDate:
+            print("Vienti ei ole annetulla tilikaudella")
+            continue
+
+        while True:
+            try:
+                tapahtumaTili=input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
+                # Haetaan kannasta tilinumeroa vastaava id
+                tapahtumaTiliId=get_account_id(tapahtumaTili)
+            except:
+                print('Syöttämäsi tilinumero ei kelpaa')
+                continue
+            else:
+                break
+
+        while True:
+            try:
+                vastaTili=input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
+                # Haetaan kannasta tilinumeroa vastaava id
+                vastaTiliId=get_account_id(vastaTili)
+            except:
+                print('Syöttämäsi tilinumero ei kelpaa')
+                continue
+            else:
+                break
+
 
         # Lisätää Doclist listaan tapahtuman dokumentti (class document)
         DocList.append(db.dbDocument(LastDocId + i, LastDocNum + i, period, ts_pvm))
