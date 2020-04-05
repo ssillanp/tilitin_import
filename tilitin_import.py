@@ -1,16 +1,17 @@
-import sqlite3
+import codecs
 import csv
-import time
 import datetime
+import sqlite3
+import sys
+import time
+
 import dataBase as db
 from bankCSV import bankinfo
-import sys
-import codecs
 
-args=sys.argv[1:]
+args = sys.argv[1:]
 if len(args) == 2:
-    dbName=str(args[0])
-    csvName=str(args[1])
+    dbName = str(args[0])
+    csvName = str(args[1])
 else:
     print("Usage: python3 tilitin_import.py [database] [csv]")
     sys.exit()
@@ -25,20 +26,20 @@ def get_account_id(account_no):
 def get_last_dbIndexes(period):
     """Funktio lukee kannasta annetun (period) tilikauden viimeisimmät id:nrot """
     sv.execute('SELECT max(id) FROM document')
-    last_doc_id=sv.fetchone()[0]
+    last_doc_id = sv.fetchone()[0]
     sv.execute(f'SELECT max(number) FROM document WHERE period_id = {period}')
-    last_doc_number=sv.fetchone()[0]
+    last_doc_number = sv.fetchone()[0]
     sv.execute('SELECT max(id) FROM entry')
-    last_ent_id=sv.fetchone()[0]
+    last_ent_id = sv.fetchone()[0]
     return last_doc_id, last_doc_number, last_ent_id
 
 
 # Luetaan kannasta tilikausien määrä ja ajat
-svtk=sqlite3.connect(dbName)
-svtk.row_factory=sqlite3.Row
-sv=svtk.cursor()
+svtk = sqlite3.connect(dbName)
+svtk.row_factory = sqlite3.Row
+sv = svtk.cursor()
 sv.execute('SELECT * FROM period')  # ORDER BY id DESC')
-r=sv.fetchall()
+r = sv.fetchall()
 print(f'Tietokannassa \033[1;33;48m{dbName.split("/")[-1]}\033[1;37;48m on tilikausia '
       f'\033[1;33;48m{len(r)}\033[1;37;48m'f' kappaletta')
 print()
@@ -58,7 +59,7 @@ print()
 
 while True:
     try:
-        period=int(input("anna tilikausi: "))
+        period = int(input("anna tilikausi: "))
         if validPeriods.count(period) != 1 or periodsInDb[validPeriods.index(period, 0, len(validPeriods))].locked != 0:
             print(f"{period} ei ole validi tai on lukittu ", end='')
             continue
@@ -79,15 +80,15 @@ print("[4] - Määrittele itse")
 print("[9] - Lopeta")
 print()
 
-bi=bankinfo()
+bi = bankinfo()
 
 while True:
     try:
-        bank=int(input("valitse: "))
+        bank = int(input("valitse: "))
         if bank == 1:
-            bank=bi.op
+            bank = bi.op
         elif bank == 2:
-            bank=bi.danske
+            bank = bi.danske
         elif bank == 4:
             bank = bi.user_defined()
         elif bank == 9:
@@ -103,8 +104,8 @@ while True:
         break
 
 with codecs.open(csvName, encoding='unicode_escape') as csvfile:
-    reader=csv.reader(csvfile, delimiter=bank.get('delimiter'))
-    csvData=list(reader)
+    reader = csv.reader(csvfile, delimiter = bank.get('delimiter'))
+    csvData = list(reader)
     print(f"Löytyi {len(csvData[0])} Saraketta")
     print()
     for i, itm in enumerate(csvData[0]):
@@ -113,13 +114,12 @@ with codecs.open(csvName, encoding='unicode_escape') as csvfile:
 # csv sarakkeiden mäppäys
 
 print()
-tapahtumaTili=0000
-vastaTili=0000
+tapahtumaTili = 0000
+vastaTili = 0000
 DocList=[]
-LastDocId=get_last_dbIndexes(period)[0]
-LastDocNum=get_last_dbIndexes(period)[1]
-LastEntId=get_last_dbIndexes(period)[2]
-
+LastDocId = get_last_dbIndexes(period)[0]
+LastDocNum = get_last_dbIndexes(period)[1]
+LastEntId = get_last_dbIndexes(period)[2]
 
 # Luetaan tapahtumat csv sisään ja lisätään DocList-listaan.
 for i, row in enumerate(csvData):
@@ -131,39 +131,41 @@ for i, row in enumerate(csvData):
         # testataan onko vienti ulos vai sisään
         # if float(row[tapahtumaDebitSarake].strip().replace(',', '.').replace(' ', '')) > 0:
         if str(row[bank.get('sumcol')]).find("-") >= 0:
-            debit=True  # jos rahaa sisään debet tapahtumatilille
+            debit = True  # jos rahaa sisään debet tapahtumatilille
         else:
-            debit=False  # jos rahaa ulos kredit tapahtumatilille
+            debit = False  # jos rahaa ulos kredit tapahtumatilille
 
         # muokataan tapahtuman päivämäärä oikeaan muotoon
-        ts_pvm=int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
+        ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
                                .timetuple()) * 1000)
-        if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[validPeriods.index(period)].endDate:
+        if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[
+            validPeriods.index(period)].endDate:
             print("Vienti ei ole annetulla tilikaudella")
             continue
 
+        # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
         while True:
             try:
-                tapahtumaTili=input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
+                tapahtumaTili = input(f'Syötä tapahtumatili [{tapahtumaTili}]: ') or tapahtumaTili
                 # Haetaan kannasta tilinumeroa vastaava id
-                tapahtumaTiliId=get_account_id(tapahtumaTili)
+                tapahtumaTiliId = get_account_id(tapahtumaTili)
             except:
                 print('Syöttämäsi tilinumero ei kelpaa')
                 continue
             else:
                 break
 
+        # pyydetään tapahtumalle vastatili ja testataan että annettu tili on kannassa
         while True:
             try:
-                vastaTili=input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
+                vastaTili = input(f'Syötä vastatili [{vastaTili}]: ') or vastaTili
                 # Haetaan kannasta tilinumeroa vastaava id
-                vastaTiliId=get_account_id(vastaTili)
+                vastaTiliId = get_account_id(vastaTili)
             except:
                 print('Syöttämäsi tilinumero ei kelpaa')
                 continue
             else:
                 break
-
 
         # Lisätää Doclist listaan tapahtuman dokumentti (class document)
         DocList.append(db.dbDocument(LastDocId + i, LastDocNum + i, period, ts_pvm))
@@ -183,7 +185,7 @@ for itm in DocList:
         print(ent.prepare_insert())
 
 # Varmistetaan kirjoitus kantaan
-kirjoitus=input("Yllä olevat rivit lisätään kantaan Y/N : ")
+kirjoitus = input("Yllä olevat rivit lisätään kantaan Y/N : ")
 
 # Lisätään rivit kantaan
 if kirjoitus == "y" or kirjoitus == "Y":
@@ -202,4 +204,4 @@ else:
 
 svtk.close()
 
-# with open('/home/sami/Documents/SVTK/svtk.csv') as csvfile:
+print("Valmis.")
