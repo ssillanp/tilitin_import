@@ -34,7 +34,7 @@ def get_last_dbIndexes(period):
     sv.execute(f'SELECT max(number) FROM document WHERE period_id = {period}')
     last_doc_number = sv.fetchone()[0]
     sv.execute('SELECT max(id) FROM entry')
-    last_ent_id = sv.fetchone()[0]
+    last_ent_id = sv.fetchone()[0] or 0
     return last_doc_id, last_doc_number, last_ent_id
 
 # Yhdistetään kantaan
@@ -109,7 +109,7 @@ while True:
         break
 
 with codecs.open(csvName, encoding='unicode_escape') as csvfile:
-    reader = csv.reader(csvfile, delimiter = bank.get('delimiter'))
+    reader = csv.reader(csvfile, delimiter=bank.get('delimiter'))
     csvData = list(reader)
     print(f"Löytyi {len(csvData[0])} Saraketta")
     print("\033[1;33;48m")
@@ -125,6 +125,29 @@ DocList=[]
 LastDocId = get_last_dbIndexes(period)[0]
 LastDocNum = get_last_dbIndexes(period)[1]
 LastEntId = get_last_dbIndexes(period)[2]
+
+print("Voit syöttää joko vain tapahtumatilin ja antaa vastatilit tilittimessä,")
+print("tai voit syöttää myös vastatilit nyt")
+print()
+print("[1] - Vain tapahtumatili, vastatilit tilittimessä")
+print("[2] - Myös vastatilit nyt")
+print()
+
+while True:
+    try:
+        tapa = int(input("Valitse [1]: ")) or 1
+        if tapa != 1 and tapa != 2:
+            print("Valite joko 1, tai 2")
+            continue
+    except KeyboardInterrupt:
+        raise
+    except:
+        print("Valite joko 1, tai 2")
+        continue
+    else:
+        break
+
+
 
 # Luetaan tapahtumat csv sisään ja lisätään DocList-listaan.
 for i, row in enumerate(csvData):
@@ -157,32 +180,38 @@ for i, row in enumerate(csvData):
             continue
 
         # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
-        while True:
-            try:
-                tapahtumaTili = input(f'Syötä tapahtumatili [\033[1;32;48m{tapahtumaTili}\033[1;37;48m]: ') or tapahtumaTili
-                # Haetaan kannasta tilinumeroa vastaava id
-                tapahtumaTiliId = get_account_id(tapahtumaTili)
-            except KeyboardInterrupt:
-                raise
-            except:
-                print('Syöttämäsi tilinumero ei kelpaa')
-                continue
-            else:
-                break
+        if tapa == 1 and tapahtumaTili == 0:
+            while True:
+                try:
+                    tapahtumaTili = input(f'Syötä tapahtumatili [\033[1;32;48m{tapahtumaTili}\033[1;37;48m]: ') or tapahtumaTili
+                    # Haetaan kannasta tilinumeroa vastaava id
+                    tapahtumaTiliId = get_account_id(tapahtumaTili)
+                except KeyboardInterrupt:
+                    raise
+                except:
+                    print('Syöttämäsi tilinumero ei kelpaa')
+                    continue
+                else:
+                    break
 
-        # pyydetään tapahtumalle vastatili ja testataan että annettu tili on kannassa
-        while True:
-            try:
-                vastaTili = input(f'Syötä vastatili [\033[1;32;48m{vastaTili}\033[1;37;48m]: ') or vastaTili
-                # Haetaan kannasta tilinumeroa vastaava id
-                vastaTiliId = get_account_id(vastaTili)
-            except KeyboardInterrupt:
-                raise
-            except:
-                print('Syöttämäsi tilinumero ei kelpaa')
-                continue
-            else:
-                break
+        if tapa != 1:
+            # pyydetään tapahtumalle vastatili ja testataan että annettu tili on kannassa
+            while True:
+                try:
+                    vastaTili = input(f'Syötä vastatili ("s" skippaa) [\033[1;32;48m{vastaTili}\033[1;37;48m]: ') or vastaTili
+                    # Haetaan kannasta tilinumeroa vastaava id
+                    if vastaTili == "s":
+                        pass
+                    vastaTiliId = get_account_id(vastaTili)
+                except KeyboardInterrupt:
+                    raise
+                except:
+                    if vastaTili == "s":
+                        break
+                    print('Syöttämäsi tilinumero ei kelpaa')
+                    continue
+                else:
+                    break
 
         # Lisätää Doclist listaan tapahtuman dokumentti (class document)
         DocList.append(db.dbDocument(LastDocId + i, LastDocNum + i, period, ts_pvm))
@@ -190,9 +219,12 @@ for i, row in enumerate(csvData):
         DocList[-1].add_entry(
             db.dbEntry(LastEntId + i * 2 - 1, LastDocId + i, tapahtumaTiliId, debit, row[bank.get('sumcol')],
                        row[bank.get('descol')], 0, 0))
-        DocList[-1].add_entry(
-            db.dbEntry(LastEntId + i * 2, LastDocId + i, vastaTiliId, not debit, row[bank.get('sumcol')],
-                       row[bank.get('descol')], 1, 0))
+        if vastaTili =="s" or tapa == 1:
+            pass
+        else:
+            DocList[-1].add_entry(
+                db.dbEntry(LastEntId + i * 2, LastDocId + i, vastaTiliId, not debit, row[bank.get('sumcol')],
+                           row[bank.get('descol')], 1, 0))
 
 # tulostetaan SQL rivit näytölle tarkastamista varten
 os.system('clear')
