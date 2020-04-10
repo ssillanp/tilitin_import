@@ -70,7 +70,7 @@ while True:
             continue
     except KeyboardInterrupt:
         raise
-    except:
+    except (TypeError, ValueError):
         print("Syöttämäsi arvo ei kelpaa")
         continue
     else:
@@ -102,7 +102,7 @@ while True:
             continue
     except KeyboardInterrupt:
         raise
-    except:
+    except (TypeError, ValueError):
         print('Antamasi arvo ei ole validi ')
         continue
     else:
@@ -141,7 +141,7 @@ while True:
             continue
     except KeyboardInterrupt:
         raise
-    except:
+    except (TypeError, ValueError):
         print("Valite joko 1, tai 2")
         continue
     else:
@@ -169,7 +169,7 @@ for i, row in enumerate(csvData):
                                .timetuple()) * 1000)
         except KeyboardInterrupt:
             raise
-        except:
+        except ValueError:
             print(f"Tiedoston {csvName.split('/')[-1]} timeformat muoto ei ole pankkimallin mukainen {bank.get('timeformat')}")
             print("lopetetaan...")
             sys.exit()
@@ -180,7 +180,7 @@ for i, row in enumerate(csvData):
             continue
 
         # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
-        if tapa == 1 and tapahtumaTili == 0:
+        if tapa == 2 or tapahtumaTili == 0:
             while True:
                 try:
                     tapahtumaTili = input(f'Syötä tapahtumatili [\033[1;32;48m{tapahtumaTili}\033[1;37;48m]: ') or tapahtumaTili
@@ -188,7 +188,7 @@ for i, row in enumerate(csvData):
                     tapahtumaTiliId = get_account_id(tapahtumaTili)
                 except KeyboardInterrupt:
                     raise
-                except:
+                except (TypeError, ValueError):
                     print('Syöttämäsi tilinumero ei kelpaa')
                     continue
                 else:
@@ -205,7 +205,7 @@ for i, row in enumerate(csvData):
                     vastaTiliId = get_account_id(vastaTili)
                 except KeyboardInterrupt:
                     raise
-                except:
+                except (TypeError, ValueError):
                     if vastaTili == "s":
                         break
                     print('Syöttämäsi tilinumero ei kelpaa')
