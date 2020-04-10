@@ -147,7 +147,20 @@ while True:
     else:
         break
 
-
+if tapa == 1:
+    # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
+    while True:
+        try:
+            tapahtumaTili=input(f'Syötä tili jolle tapahtumat viedään: ')
+            # Haetaan kannasta tilinumeroa vastaava id
+            tapahtumaTiliId=get_account_id(tapahtumaTili)
+        except KeyboardInterrupt:
+            raise
+        except (TypeError, ValueError, sqlite3.OperationalError):
+            print('Syöttämäsi tilinumero ei kelpaa')
+            continue
+        else:
+            break
 
 # Luetaan tapahtumat csv sisään ja lisätään DocList-listaan.
 for i, row in enumerate(csvData):
@@ -155,6 +168,7 @@ for i, row in enumerate(csvData):
     if i == 0:
         pass
     else:
+
         print("\033[1;34;48m{}, {}, {} \033[1;37;48m".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
         # testataan onko vienti ulos vai sisään
         if str(row[bank.get('sumcol')]).find("-") >= 0:
@@ -180,15 +194,15 @@ for i, row in enumerate(csvData):
             continue
 
         # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
-        if tapa == 2 or tapahtumaTili == 0:
+        if tapa != 1 or tapahtumaTili == 0:
             while True:
                 try:
                     tapahtumaTili = input(f'Syötä tapahtumatili [\033[1;32;48m{tapahtumaTili}\033[1;37;48m]: ') or tapahtumaTili
                     # Haetaan kannasta tilinumeroa vastaava id
-                    tapahtumaTiliId = get_account_id(tapahtumaTili)
+                    tapahtumaTiliId=get_account_id(tapahtumaTili)
                 except KeyboardInterrupt:
                     raise
-                except (TypeError, ValueError):
+                except (TypeError, ValueError, sqlite3.OperationalError):
                     print('Syöttämäsi tilinumero ei kelpaa')
                     continue
                 else:
@@ -201,11 +215,11 @@ for i, row in enumerate(csvData):
                     vastaTili = input(f'Syötä vastatili ("s" skippaa) [\033[1;32;48m{vastaTili}\033[1;37;48m]: ') or vastaTili
                     # Haetaan kannasta tilinumeroa vastaava id
                     if vastaTili == "s":
-                        pass
-                    vastaTiliId = get_account_id(vastaTili)
+                        break
+                    vastaTiliId=get_account_id(vastaTili)
                 except KeyboardInterrupt:
                     raise
-                except (TypeError, ValueError):
+                except (TypeError, ValueError, sqlite3.OperationalError):
                     if vastaTili == "s":
                         break
                     print('Syöttämäsi tilinumero ei kelpaa')
@@ -233,9 +247,9 @@ print("\033[1;32;48mKirjoitetaan seuraavat tapahtumat kantaan:")
 
 for itm in DocList:
     print("------------------------------------------------------")
-    print(itm.prepare_insert())
+    print(f"{itm.prepare_insert()}")
     for ent in itm.entries:
-        print(ent.prepare_insert())
+        print(f" {ent.prepare_insert()}")
 print("\033[1;37;48m")
 
 # Varmistetaan kirjoitus kantaan
