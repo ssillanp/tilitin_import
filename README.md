@@ -6,7 +6,7 @@ Thanks to T.Helineva about the really handy Tilitin App.
 This code is licensed under the The GNU GPLv3. A copy of the licence is in COPYING.txt  
 
 
-Python skripti pankin csv-muotoisen tapahhtumaluettelon lisäämiseki tilitin-kantaan.
+Python skripti pankin csv-muotoisen tapahhtumaluettelon lisäämiseksi tilitin-kantaan.
 
 HUOM!
 Luo kannasta kopio, ennen kuin käytät. Kaikki vastuu mahdollisista virheistä ja tietojen hukkaamisista käyttäjällä
