@@ -23,9 +23,9 @@ Seuraavaksi skripti kytyy käytettänän pankin csv mallin:
 Valittu tilikausi 6
 Valitse tapahtumaluettelon (.csv) malli
 
-[1] - Osuuspankki
-[2] - Danske Bank
-[3] - Nodrea (ei käytössä vielä)
+[1] - Osuuspankki\
+[2] - Danske Bank\
+[3] - Nodrea (ei käytössä vielä)\
 [4] - Määrittele itse
 
 valitse: 2
@@ -70,16 +70,16 @@ Syötä tili jolle tapahtumat viedään: 1911
 17.02.2020, -334.8, Pekka Pee 
 Vienti ei ole annetulla tilikaudella, skipataan...
 Kirjoitetaanko seuraavat rivit kantaan:
-\------------------------------------------------------
+
 INSERT INTO document VALUES (177, 42, 6, 1573077600000) -> Dokumentille 42, Vientipäivämäärä 06.11.2019
  INSERT INTO entry VALUES (351, 177, 12, 1, 1566.76, 'Yritys A Oy', 0, 0) -> 1566.76EUR, Tili: Pankkitili, Selite: Yritys A Oy
-\------------------------------------------------------
+
 INSERT INTO document VALUES (178, 43, 6, 1575237600000) -> Dokumentille 43, Vientipäivämäärä 01.12.2019
  INSERT INTO entry VALUES (353, 178, 12, 1, 620.0, 'Kuljetus AB Oy', 0, 0) -> 620.0EUR, Tili: Pankkitili, Selite: Kuljetus AB Oy
-\------------------------------------------------------
+
 INSERT INTO document VALUES (179, 44, 6, 1577743200000) -> Dokumentille 44, Vientipäivämäärä 30.12.2019
  INSERT INTO entry VALUES (355, 179, 12, 1, 0.2, 'Lahdevero', 0, 0) -> 0.2EUR, Tili: Pankkitili, Selite: Lahdevero
-------------------------------------------------------
+
 INSERT INTO document VALUES (180, 45, 6, 1577743200000) -> Dokumentille 45, Vientipäivämäärä 30.12.2019
  INSERT INTO entry VALUES (357, 180, 12, 0, 0.73, 'Korko', 0, 0) -> 0.73EUR, Tili: Pankkitili, Selite: Korko
 
