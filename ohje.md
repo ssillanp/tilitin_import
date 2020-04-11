@@ -8,12 +8,13 @@ Skripti lukee kannasta tilikaudet ja tulostaa ne ruudulle:
 
 Tietokannassa kanta.sqlite on tilikausia 4 kappaletta
 
-[2] 31.12.2015 - 30.12.2016 Lukittu: 1
-[4] 31.12.2016 - 30.12.2017 Lukittu: 1
-[5] 31.12.2017 - 30.12.2018 Lukittu: 0
+[2] 31.12.2015 - 30.12.2016 Lukittu: 1\
+[4] 31.12.2016 - 30.12.2017 Lukittu: 1\
+[5] 31.12.2017 - 30.12.2018 Lukittu: 0\
 [6] 31.12.2018 - 30.12.2019 Lukittu: 0
 
 Anna tilikausi: 6
+
 
 Syötä käytettävän tilikauden numero. Kausi ei saa olla lukittu. Mikäli tuot tapahtumat uudelle tilikaudelle,
 luo se ensi tilittimessä, jotta alkusaldot tulevat oikein.
