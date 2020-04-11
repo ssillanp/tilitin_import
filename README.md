@@ -3,7 +3,7 @@
 Python script for importing bank csv into tilitin ( a finnish bookkeeping app)
 Thanks to T.Helineva about the really handy Tilitin App.
 
-This code is licensed under the The GNU GPLv3. A copy of the licence is in COPYING.txt  
+This code is distributed under the The GNU GPLv3. A copy of the licence is in COPYING.txt  
 
 
 Python skripti pankin csv-muotoisen tapahhtumaluettelon lisäämiseksi tilitin-kantaan.
