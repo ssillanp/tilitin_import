@@ -4,7 +4,7 @@ Python script for importing bank csv into tilitin ( a finnish bookkeeping app)
 Thanks to T.Helineva about the really handy Tilitin App.
 
 
-Python skripti pankin csv-muotoisen tapahhtumaluettelon lisäämiseki tilitin-kantaan.
+Python skripti pankin csv-muotoisen tapahhtumaluettelon lisäämiseksi tilitin-kantaan.
 
 HUOM!
 Luo kannasta kopio, ennen kuin käytät. Kaikki vastuu mahdollisista virheistä ja tietojen hukkaamisista käyttäjällä
