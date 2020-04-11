@@ -254,10 +254,13 @@ print("\033[1;32;48mKirjoitetaanko seuraavat rivit kantaan:")
 
 for doc in DocList:
     print("------------------------------------------------------")
-    print(f"{doc.prepare_insert()} \033[1;34;48m-> Dokumentille {doc.number}, Vientipäivämäärä {datetime.datetime.utcfromtimestamp(doc.doc_date / 1000).strftime('%d.%m.%Y')}\033[1;32;48m")
+    print(f"{doc.prepare_insert()} \033[1;34;48m-> Dokumentille {doc.number}, "
+          f"Vientipäivämäärä {datetime.datetime.utcfromtimestamp(doc.doc_date / 1000).strftime('%d.%m.%Y')}\033[1;32;48m")
 
     for ent in doc.entries:
-        print(f" {ent.prepare_insert()} \033[1;34;48m-> {ent.amount}EUR, Tili: {get_account_name(ent.account_id)}, Selite: {ent.description}\033[1;32;48m")
+        print(f" {ent.prepare_insert()} \033[1;34;48m-> {ent.amount}EUR, "
+              f"Tili: {get_account_name(ent.account_id)}, Selite: {ent.description}\033[1;32;48m")
+
 print("\033[1;37;48m")
 
 # Varmistetaan kirjoitus kantaan
