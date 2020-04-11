@@ -28,7 +28,7 @@ def get_account_id(account_no):
     return result
 
 def get_account_name(account_id):
-    """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
+    """Funktio hakee kannasta tilin nimen annetun  id:n perusteella"""
     sv.execute(f'SELECT name FROM account WHERE id = {account_id}')
     result = sv.fetchone()[0]
     return result
@@ -168,84 +168,85 @@ if tapa == 1:
             continue
         else:
             break
+# Poistetaan csv header rivi
+csvData.remove(csvData[0])
 
-# Luetaan tapahtumat csv sisään ja lisätään DocList-listaan.
+# Sortataan lista vanhimmasta uusimpaan.
+csvData.sort(key=lambda x: datetime.datetime.strptime(x[0], '%d.%m.%Y') )
+
+# Luetaan tapahtumat sisään ja lisätään DocList-listaan.
 for i, row in enumerate(csvData):
-    # skipataan otsikkorivi
-    if i == 0:
+
+    print("\033[1;34;48m{}, {}, {} \033[1;37;48m".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
+    # testataan onko vienti ulos vai sisään
+    if str(row[bank.get('sumcol')]).find("-") >= 0:
+        debit = True  # jos rahaa sisään debet tapahtumatilille
+    else:
+        debit = False  # jos rahaa ulos kredit tapahtumatilille
+
+    # muokataan tapahtuman päivämäärä oikeaan muotoon
+    # Huom. Kannassa ajan esitys muodossa int(timestamp*1000)
+    try:
+        ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
+                           .timetuple()) * 1000)
+    except KeyboardInterrupt:
+        raise
+    except ValueError:
+        print(f"Tiedoston {csvName.split('/')[-1]} timeformat muoto ei ole pankkimallin mukainen {bank.get('timeformat')}")
+        print("lopetetaan...")
+        sys.exit()
+    # Testataan että tapahtuma ajoittuu tilikaudelle, jos ei skipataan
+    if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[
+        validPeriods.index(period)].endDate:
+        print("\033[1;31;48mVienti ei ole annetulla tilikaudella, skipataan...\033[1;37;48m")
+        continue
+
+    # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
+    if tapa != 1 or tapahtumaTili == 0:
+        while True:
+            try:
+                tapahtumaTili = input(f'Syötä tapahtumatili [\033[1;32;48m{tapahtumaTili}\033[1;37;48m]: ') or tapahtumaTili
+                # Haetaan kannasta tilinumeroa vastaava id
+                tapahtumaTiliId=get_account_id(tapahtumaTili)
+            except KeyboardInterrupt:
+                raise
+            except (TypeError, ValueError, sqlite3.OperationalError):
+                print('Syöttämäsi tilinumero ei kelpaa')
+                continue
+            else:
+                break
+
+    if tapa != 1:
+        # pyydetään tapahtumalle vastatili ja testataan että annettu tili on kannassa
+        while True:
+            try:
+                vastaTili = input(f'Syötä vastatili ("s" skippaa) [\033[1;32;48m{vastaTili}\033[1;37;48m]: ') or vastaTili
+                # Haetaan kannasta tilinumeroa vastaava id
+                if vastaTili == "s":
+                    break
+                vastaTiliId=get_account_id(vastaTili)
+            except KeyboardInterrupt:
+                raise
+            except (TypeError, ValueError, sqlite3.OperationalError):
+                if vastaTili == "s":
+                    break
+                print('Syöttämäsi tilinumero ei kelpaa')
+                continue
+            else:
+                break
+
+    # Lisätää Doclist listaan tapahtuman dokumentti (class document)
+    DocList.append(db.dbDocument(LastDocId + i + 1, LastDocNum + i + 1, period, ts_pvm))
+    # lisätään Doclist dokumentille tapahtuman entryt (class document.entries class entry)
+    DocList[-1].add_entry(
+        db.dbEntry(LastEntId + i * 2, LastDocId + i + 1, tapahtumaTiliId, debit, row[bank.get('sumcol')],
+                   row[bank.get('descol')], 0, 0))
+    if vastaTili =="s" or tapa == 1:
         pass
     else:
-
-        print("\033[1;34;48m{}, {}, {} \033[1;37;48m".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
-        # testataan onko vienti ulos vai sisään
-        if str(row[bank.get('sumcol')]).find("-") >= 0:
-            debit = True  # jos rahaa sisään debet tapahtumatilille
-        else:
-            debit = False  # jos rahaa ulos kredit tapahtumatilille
-
-        # muokataan tapahtuman päivämäärä oikeaan muotoon
-        # Huom. Kannassa ajan esitys muodossa int(timestamp*1000)
-        try:
-            ts_pvm = int(time.mktime(datetime.datetime.strptime(f"{row[bank.get('datecol')]}", bank.get('timeformat'))
-                               .timetuple()) * 1000)
-        except KeyboardInterrupt:
-            raise
-        except ValueError:
-            print(f"Tiedoston {csvName.split('/')[-1]} timeformat muoto ei ole pankkimallin mukainen {bank.get('timeformat')}")
-            print("lopetetaan...")
-            sys.exit()
-        # Testataan että tapahtuma ajoittuu tilikaudelle, jos ei skipataan
-        if ts_pvm < periodsInDb[validPeriods.index(period)].startDate or ts_pvm > periodsInDb[
-            validPeriods.index(period)].endDate:
-            print("\033[1;31;48mVienti ei ole annetulla tilikaudella, skipataan...\033[1;37;48m")
-            continue
-
-        # pyydetään tapahtumalle tapahtumatili ja testataan että annettu tili on kannassa
-        if tapa != 1 or tapahtumaTili == 0:
-            while True:
-                try:
-                    tapahtumaTili = input(f'Syötä tapahtumatili [\033[1;32;48m{tapahtumaTili}\033[1;37;48m]: ') or tapahtumaTili
-                    # Haetaan kannasta tilinumeroa vastaava id
-                    tapahtumaTiliId=get_account_id(tapahtumaTili)
-                except KeyboardInterrupt:
-                    raise
-                except (TypeError, ValueError, sqlite3.OperationalError):
-                    print('Syöttämäsi tilinumero ei kelpaa')
-                    continue
-                else:
-                    break
-
-        if tapa != 1:
-            # pyydetään tapahtumalle vastatili ja testataan että annettu tili on kannassa
-            while True:
-                try:
-                    vastaTili = input(f'Syötä vastatili ("s" skippaa) [\033[1;32;48m{vastaTili}\033[1;37;48m]: ') or vastaTili
-                    # Haetaan kannasta tilinumeroa vastaava id
-                    if vastaTili == "s":
-                        break
-                    vastaTiliId=get_account_id(vastaTili)
-                except KeyboardInterrupt:
-                    raise
-                except (TypeError, ValueError, sqlite3.OperationalError):
-                    if vastaTili == "s":
-                        break
-                    print('Syöttämäsi tilinumero ei kelpaa')
-                    continue
-                else:
-                    break
-
-        # Lisätää Doclist listaan tapahtuman dokumentti (class document)
-        DocList.append(db.dbDocument(LastDocId + i, LastDocNum + i, period, ts_pvm))
-        # lisätään Doclist dokumentille tapahtuman entryt (class document.entries class entry)
         DocList[-1].add_entry(
-            db.dbEntry(LastEntId + i * 2 - 1, LastDocId + i, tapahtumaTiliId, debit, row[bank.get('sumcol')],
-                       row[bank.get('descol')], 0, 0))
-        if vastaTili =="s" or tapa == 1:
-            pass
-        else:
-            DocList[-1].add_entry(
-                db.dbEntry(LastEntId + i * 2, LastDocId + i, vastaTiliId, not debit, row[bank.get('sumcol')],
-                           row[bank.get('descol')], 1, 0))
+            db.dbEntry(LastEntId + i * 2 + 1, LastDocId + i + 1, vastaTiliId, not debit, row[bank.get('sumcol')],
+                       row[bank.get('descol')], 1, 0))
 
 # tulostetaan SQL rivit näytölle tarkastamista varten
 os.system('clear')

@@ -28,6 +28,9 @@ class dbDocument:
         self.doc_date = doc_date
         self.entries = []
 
+    def __lt__(self, other):
+        return self.doc_date < other.doc_date
+
     def add_entry(self, dbEntry):
         """Funktio lisää dokumentille entryn"""
         self.entries.append(dbEntry)
@@ -37,6 +40,7 @@ class dbDocument:
         insertString="INSERT INTO document VALUES ({}, {}, {}, {})".format(self.id, self.number, self.period_id,
                                                                      self.doc_date)
         return insertString
+
 
 class dbPeriod:
     """Luokka vastaa kannan tilikauden "period" rakennetta"""
