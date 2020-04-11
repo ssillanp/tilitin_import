@@ -18,6 +18,7 @@ class dbEntry:
                                                                                  self.row_number, self.flags)
         return insertString
 
+
 class dbDocument:
     """luokka vastaa kannan document taulun rakennetta"""
     def __init__(self, id, number, period_id, doc_date):

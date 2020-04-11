@@ -24,7 +24,14 @@ else:
 def get_account_id(account_no):
     """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
     sv.execute(f'SELECT id FROM account WHERE number = {account_no}')
-    return sv.fetchone()[0]
+    result = sv.fetchone()[0]
+    return result
+
+def get_account_name(account_id):
+    """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
+    sv.execute(f'SELECT name FROM account WHERE id = {account_id}')
+    result = sv.fetchone()[0]
+    return result
 
 
 def get_last_dbIndexes(period):
@@ -243,13 +250,14 @@ for i, row in enumerate(csvData):
 # tulostetaan SQL rivit näytölle tarkastamista varten
 os.system('clear')
 
-print("\033[1;32;48mKirjoitetaan seuraavat tapahtumat kantaan:")
+print("\033[1;32;48mKirjoitetaanko seuraavat rivit kantaan:")
 
-for itm in DocList:
+for doc in DocList:
     print("------------------------------------------------------")
-    print(f"{itm.prepare_insert()}")
-    for ent in itm.entries:
-        print(f" {ent.prepare_insert()}")
+    print(f"{doc.prepare_insert()} \033[1;34;48m-> Dokumentille {doc.number}, Vientipäivämäärä {datetime.datetime.utcfromtimestamp(doc.doc_date / 1000).strftime('%d.%m.%Y')}\033[1;32;48m")
+
+    for ent in doc.entries:
+        print(f" {ent.prepare_insert()} \033[1;34;48m-> {ent.amount}EUR, Tili: {get_account_name(ent.account_id)}, Selite: {ent.description}\033[1;32;48m")
 print("\033[1;37;48m")
 
 # Varmistetaan kirjoitus kantaan

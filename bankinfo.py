@@ -11,7 +11,7 @@ class bankinfo:
 
         self.danske = {
             'delimiter': ',',
-            'timeformat': '%d.%m.%Y',
+            'timeformat': '%m/%d/%y',
             'datecol': 0,
             'sumcol': 2,
             'descol': 1
