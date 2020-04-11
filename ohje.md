@@ -23,13 +23,9 @@ Seuraavaksi skripti kytyy käytettänän pankin csv mallin:
 >Valitse tapahtumaluettelon (.csv) malli
 >
 >[1] - Osuuspankki
-
 >[2] - Danske Bank
-
 >[3] - Nodrea (ei käytössä vielä)
-
 >[4] - Määrittele itse
-
 >
 >valitse: 2
 
