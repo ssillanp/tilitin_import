@@ -39,11 +39,11 @@ Anna valittu malli tai syötä arvot itse, valitsemalla [4]. Malli pitää sisä
 
 >Löytyi 6 Saraketta
 >
->[0]  Pvm
->[1]  Saaja/Maksaja
->[2]  Mara
->[3]  Saldo
->[4]  Tila
+>[0]  Pvm\
+>[1]  Saaja/Maksaja\
+>[2]  Mara\
+>[3]  Saldo\
+>[4]  Tila\
 >[5]  Tarkastus
 >
 >Voit syöttää joko vain tapahtumatilin ja antaa vastatilit tilittimessä,
