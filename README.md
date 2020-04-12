@@ -18,4 +18,5 @@ Pankkimallit OP ja Danske, lisäksi csv:n mallin voi syöttää käsin.
 
 Käyttö
 >python3 tilitin_import.py [tilitin_kanta.sqlite] [pankki.csv]
+
 Tarkemmat ohjeet: ohje.md
