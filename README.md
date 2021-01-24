@@ -19,5 +19,4 @@ Pankkimallit OP ja Danske, lisäksi csv:n mallin voi syöttää käsin.
 Käyttö
 >python3 tilitin_import.py [tilitin_kanta.sqlite] [pankki.csv]
 
-Kannassa tulee olla lukitsemattomia tilikausia. 
-Mikäli tuot tapahtumat uudelle kaudelle, luo uusi tilikausi tilittimessä, jotta alkusaldot ovat oikein.
+Tarkemmat ohjeet: ohje.md
