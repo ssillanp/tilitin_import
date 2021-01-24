@@ -176,7 +176,6 @@ csvData.sort(key=lambda x: datetime.datetime.strptime(x[0], '%d.%m.%Y') )
 
 # Luetaan tapahtumat sisään ja lisätään DocList-listaan.
 for i, row in enumerate(csvData):
-
     print("\033[1;34;48m{}, {}, {} \033[1;37;48m".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
     # testataan onko vienti ulos vai sisään
     if str(row[bank.get('sumcol')]).find("-") >= 0:
@@ -239,14 +238,16 @@ for i, row in enumerate(csvData):
     DocList.append(db.dbDocument(LastDocId + i + 1, LastDocNum + i + 1, period, ts_pvm))
     # lisätään Doclist dokumentille tapahtuman entryt (class document.entries class entry)
     DocList[-1].add_entry(
-        db.dbEntry(LastEntId + i * 2, LastDocId + i + 1, tapahtumaTiliId, debit, row[bank.get('sumcol')],
+        db.dbEntry(LastEntId + i + 1, LastDocId + i + 1, tapahtumaTiliId, debit, row[bank.get('sumcol')],
                    row[bank.get('descol')], 0, 0))
     if vastaTili =="s" or tapa == 1:
-        pass
+       LastEntId += 1
+       pass
     else:
         DocList[-1].add_entry(
-            db.dbEntry(LastEntId + i * 2 + 1, LastDocId + i + 1, vastaTiliId, not debit, row[bank.get('sumcol')],
+            db.dbEntry(LastEntId + i + 2, LastDocId + i + 1, vastaTiliId, not debit, row[bank.get('sumcol')],
                        row[bank.get('descol')], 1, 0))
+        LastEntId += 1
 
 # tulostetaan SQL rivit näytölle tarkastamista varten
 os.system('clear')
