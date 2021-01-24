@@ -179,9 +179,9 @@ for i, row in enumerate(csvData):
     print("\033[1;34;48m{}, {}, {} \033[1;37;48m".format(row[bank.get('datecol')], row[bank.get('sumcol')], row[bank.get('descol')]))
     # testataan onko vienti ulos vai sisään
     if str(row[bank.get('sumcol')]).find("-") >= 0:
-        debit = True  # jos rahaa sisään debet tapahtumatilille
+        debit = False  # jos rahaa sisään
     else:
-        debit = False  # jos rahaa ulos kredit tapahtumatilille
+        debit = True  # jos rahaa ulos
 
     # muokataan tapahtuman päivämäärä oikeaan muotoon
     # Huom. Kannassa ajan esitys muodossa int(timestamp*1000)
