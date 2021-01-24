@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import codecs
 import csv
 import datetime
