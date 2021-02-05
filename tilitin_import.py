@@ -146,12 +146,12 @@ while True:
     try:
         tapa = int(input("Valitse [1]: ")) or 1
         if tapa != 1 and tapa != 2:
-            print("Valite joko 1, tai 2")
+            print("Valitse joko 1, tai 2")
             continue
     except KeyboardInterrupt:
         raise
     except (TypeError, ValueError):
-        print("Valite joko 1, tai 2")
+        print("Valitse joko 1, tai 2")
         continue
     else:
         break
