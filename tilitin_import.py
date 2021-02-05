@@ -7,21 +7,29 @@ import sqlite3
 import sys
 import time
 import os
+import PySimpleGUI as sg
 
 import tilitindb as db
 from bankinfo import bankinfo
 
+def_path = '~/Documents/SVTK/2020/tilit'
+
 os.system('clear')
 
-# Kanta ja csv argumentteina
-args = sys.argv[1:]
-if len(args) == 2:
-    dbName = str(args[0])
-    csvName = str(args[1])
-else:
-    print("Usage: python3 tilitin_import.py [database] [csv]")
-    sys.exit()
+sg.ChangeLookAndFeel('DarkGrey10')
 
+layout = [[sg.Text('Tietokanta ja tiliote:')],
+          [sg.Text('Tilitin tiedosto', size=(20, 1)), sg.Input(), sg.FileBrowse(file_types=(("SQLite Files", "*.sqlite"),("All Files", "*.*")), initial_folder = def_path)],
+          [sg.Text('Tiliote csv', size=(20, 1)), sg.Input(), sg.FileBrowse(file_types=(("Csv Files", "*.csv"),))],
+          [sg.Submit(), sg.Cancel()]]
+
+window = sg.Window('Tilitin Import v0.1', layout)
+
+event, values = window.read()
+window.close()
+
+dbName = values[0]
+csvName = values[1]
 
 def get_account_id(account_no):
     """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
@@ -54,20 +62,20 @@ sv = svtk.cursor()
 # Luetaan kannasta tilikausien määrä ja ajat
 sv.execute('SELECT * FROM period')
 r = sv.fetchall()
-print(f'Tietokannassa \033[1;33;48m{dbName.split("/")[-1]}\033[1;37;48m on tilikausia '
-      f'\033[1;33;48m{len(r)}\033[1;37;48m'f' kappaletta')
-print()
+print(len(r))
+
 periodsInDb=[]
 validPeriods=[]
 
 for y, itm in enumerate(r):
     periodsInDb.append(db.dbPeriod(tuple(itm)[0], tuple(itm)[1], tuple(itm)[2], tuple(itm)[3]))
     validPeriods.append(tuple(itm)[0])
-    print("\033[1;33;48m[{}] {} - {} Lukittu: {}".format(periodsInDb[y].id, datetime.datetime
-                                            .utcfromtimestamp(periodsInDb[y].startDate / 1000)
+    sg.Popup(periodsInDb[y].id, datetime.datetime.utcfromtimestamp(periodsInDb[y].startDate / 1000)
                                             .strftime("%d.%m.%Y"), datetime.datetime.
                                             utcfromtimestamp(periodsInDb[y].endDate / 1000).strftime("%d.%m.%Y"),
-                                            periodsInDb[y].locked))
+                                            periodsInDb[y].locked)
+
+
 
 print("\033[1;37;48m")
 
