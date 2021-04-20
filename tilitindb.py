@@ -1,7 +1,7 @@
 class DbEntry:
     """Luokka vastaa kannan entry taulun rakennetta"""
 
-    def __init__(self, entry_id, document_id, account_id, debit, amount, description, row_number, flags):
+    def __init__(self, entry_id, document_id, account_id, debit, amount, description, row_number):
         self.id = int(entry_id)
         self.document_id = int(document_id)
         self.account_id = int(account_id)
@@ -9,7 +9,7 @@ class DbEntry:
         self.amount = abs(float(amount.replace(',', '.').replace(' ', '').strip()))
         self.description = description
         self.row_number = int(row_number)
-        self.flags = int(flags)
+        self.flags = 0
 
     @property
     def sql_inject(self):

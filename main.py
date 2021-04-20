@@ -19,9 +19,9 @@ import time
 import os
 import pandas as pd
 
-
 import tilitindb as db
 from bankinfo import bankinfo
+
 
 def parse_args():
     args = sys.argv[1:]
@@ -34,34 +34,85 @@ def parse_args():
         sys.exit(0)
     return db_name, csv_name
 
+
 def read_db(db_name):
     with sqlite3.connect(db_name) as tilitin_db:
-        accounts = pd.read_sql('SELECT * FROM account', tilitin_db)
-        documents = pd.read_sql('SELECT * FROM document', tilitin_db)
-        entries = pd.read_sql('SELECT * FROM entry', tilitin_db)
+        cursor = tilitin_db.cursor()
+        cursor.execute('SELECT max(id) FROM document')
+        last_document_id = cursor.fetchone()[0]
+        # print(last_document_id)
+        cursor.execute('SELECT number FROM document WHERE id={}'.format(last_document_id))
+        last_document_number = cursor.fetchone()[0]
+        cursor.execute('SELECT max(id) FROM entry')
+        last_entry_id = cursor.fetchone()[0]
         periods = pd.read_sql('SELECT * FROM period', tilitin_db)
 
-    accounts.set_index('id', inplace=True)
-    documents = documents.assign(new=False)
-    documents.set_index('id', inplace=True)
-    entries = entries.assign(new=False)
-    entries.set_index('id', inplace=True)
-    periods = periods.assign(new=False)
-    periods.set_index('id', inplace=True)
+    return last_document_id, last_document_number, last_entry_id, periods
 
-    return accounts, documents, entries, periods
 
 def read_csv(csv_name, delimiter):
     with codecs.open(csv_name, encoding='unicode_escape') as csvfile:
-        csv_data = pd.read_csv(csvfile)
-        return csv_data
+        csv_data = pd.read_csv(csvfile, delimiter=delimiter)
+    return csv_data
+
+
+
+def get_account_id(db_name, account_no):
+    """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
+    with sqlite3.connect(db_name) as tilitin_db:
+        cursor = tilitin_db.cursor()
+        cursor.execute(f'SELECT id FROM account WHERE number = {account_no}')
+        result = cursor.fetchone()[0]
+        return result
+
+def get_account_name(db_name, account_id):
+    """Funktio hakee kannasta tilin nimen annetun  id:n perusteella"""
+    with sqlite3.connect(db_name) as tilitin_db:
+        cursor = tilitin_db.cursor()
+        cursor.execute(f'SELECT name FROM account WHERE id = {account_id}')
+        result = cursor.fetchone()[0]
+    return result
+
+
+def print_db_info(db_periods):
+    print("Kannasta löytyvät seuraavat tilikaudet: ")
+    print("ID  Vuosi  Lukittu")
+    print("--  -----  -------")
+    for item in db_periods.itertuples():
+        print(f"{item[1]}   {datetime.datetime.utcfromtimestamp(item[3] / 1000).strftime('%Y')}  "
+              f" {'Kyllä' if item[4] == 1 else 'Ei'}")
+    last_period_id = max(db_periods['id'])
+    print()
+    print(f"Uudet tapahtumat lisätään tilikaudelle {last_period_id}")
+    print("Tapahtumat viedään kantaan tapahtumatilille ja väliaikaiselle vastatilille")
+    vientitili = input("Anna tili, jolle tapahtumat viedään (tapahtimatili) 'q' lopettaa: ")
+    if vientitili.lower() == 'q':
+        sys.exit(0)
+    temp_vastatili = input("Anna vastatili, jolle vienti tehdään (esim.8999) 'q' lopettaa: ")
+    if temp_vastatili.lower() == 'q':
+        sys.exit(0)
+    return last_period_id, vientitili, temp_vastatili
+
+
+def create_new_items(csv_data, last_document_id, last_document_number,
+                     last_entry_id, period_id, vientitili, temp_vastatili):
+    docs = []
+    ents = []
+    for item in csv_data.itertuples():
+        print(item.Mara)
+
+
+
 
 def main():
     db_name, csv_name = parse_args()
-    accounts, documents, entries, periods = read_db(db_name)
+    last_document_id, last_document_number, last_entry_id, periods = read_db(db_name)
     csv_data = read_csv(csv_name, ',')
+    last_period_id, vientitili, temp_vastatili = print_db_info(periods)
+    create_new_items(csv_data, last_document_id, last_document_number,
+                     last_entry_id, last_period_id, vientitili, temp_vastatili)
 
-    pass
+
 
 
 if __name__ == '__main__':
