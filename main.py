@@ -53,6 +53,7 @@ def read_db(db_name):
 def read_csv(csv_name, delimiter):
     with codecs.open(csv_name, encoding='unicode_escape') as csvfile:
         csv_data = pd.read_csv(csvfile, delimiter=delimiter)
+    print(csv_data)
     return csv_data
 
 
@@ -99,7 +100,7 @@ def create_new_items(csv_data, last_document_id, last_document_number,
     docs = []
     ents = []
     for item in csv_data.itertuples():
-        print(item.Mara)
+        print(item)
 
 
 
@@ -107,7 +108,7 @@ def create_new_items(csv_data, last_document_id, last_document_number,
 def main():
     db_name, csv_name = parse_args()
     last_document_id, last_document_number, last_entry_id, periods = read_db(db_name)
-    csv_data = read_csv(csv_name, ',')
+    csv_data = read_csv(csv_name, ';')
     last_period_id, vientitili, temp_vastatili = print_db_info(periods)
     create_new_items(csv_data, last_document_id, last_document_number,
                      last_entry_id, last_period_id, vientitili, temp_vastatili)
