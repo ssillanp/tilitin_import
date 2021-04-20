@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import time
 import os
+import pandas as pd
 
 import tilitindb as db
 from bankinfo import bankinfo
@@ -48,7 +49,7 @@ def get_last_dbIndexes(period):
 
 # Yhdistetään kantaan
 svtk = sqlite3.connect(dbName)
-svtk.row_factory = sqlite3.Row
+# svtk.row_factory = sqlite3.Row
 sv = svtk.cursor()
 
 # Luetaan kannasta tilikausien määrä ja ajat
@@ -61,15 +62,16 @@ periodsInDb=[]
 validPeriods=[]
 
 for y, itm in enumerate(r):
-    periodsInDb.append(db.dbPeriod(tuple(itm)[0], tuple(itm)[1], tuple(itm)[2], tuple(itm)[3]))
-    validPeriods.append(tuple(itm)[0])
+    print(itm)
+    periodsInDb.append(db.DbPeriod(itm[0], itm[1], itm[2], itm[3]))
+    validPeriods.append(itm[0])
     print("\033[1;33;48m[{}] {} - {} Lukittu: {}".format(periodsInDb[y].id, datetime.datetime
                                             .utcfromtimestamp(periodsInDb[y].startDate / 1000)
                                             .strftime("%d.%m.%Y"), datetime.datetime.
                                             utcfromtimestamp(periodsInDb[y].endDate / 1000).strftime("%d.%m.%Y"),
                                             periodsInDb[y].locked))
 
-print("\033[1;37;48m")
+# print("\033[1;37;48m")
 
 while True:
     try:
@@ -237,17 +239,17 @@ for i, row in enumerate(csvData):
                 break
 
     # Lisätää Doclist listaan tapahtuman dokumentti (class document)
-    DocList.append(db.dbDocument(LastDocId + i + 1, LastDocNum + i + 1, period, ts_pvm))
+    DocList.append(db.DbDocument(LastDocId + i + 1, LastDocNum + i + 1, period, ts_pvm))
     # lisätään Doclist dokumentille tapahtuman entryt (class document.entries class entry)
     DocList[-1].add_entry(
-        db.dbEntry(LastEntId + i + 1, LastDocId + i + 1, tapahtumaTiliId, debit, row[bank.get('sumcol')],
+        db.DbEntry(LastEntId + i + 1, LastDocId + i + 1, tapahtumaTiliId, debit, row[bank.get('sumcol')],
                    row[bank.get('descol')], 0, 0))
     if vastaTili =="s" or tapa == 1:
        LastEntId += 1
        pass
     else:
         DocList[-1].add_entry(
-            db.dbEntry(LastEntId + i + 2, LastDocId + i + 1, vastaTiliId, not debit, row[bank.get('sumcol')],
+            db.DbEntry(LastEntId + i + 2, LastDocId + i + 1, vastaTiliId, not debit, row[bank.get('sumcol')],
                        row[bank.get('descol')], 1, 0))
         LastEntId += 1
 
@@ -258,11 +260,11 @@ print("\033[1;32;48mKirjoitetaanko seuraavat rivit kantaan:")
 
 for doc in DocList:
     print("------------------------------------------------------")
-    print(f"{doc.prepare_insert()} \033[1;34;48m-> Dokumentille {doc.number}, "
+    print(f"{doc.sql_inject} \033[1;34;48m-> Dokumentille {doc.number}, "
           f"Vientipäivämäärä {datetime.datetime.utcfromtimestamp(doc.doc_date / 1000).strftime('%d.%m.%Y')}\033[1;32;48m")
 
     for ent in doc.entries:
-        print(f" {ent.prepare_insert()} \033[1;34;48m-> {ent.amount}EUR, "
+        print(f" {ent.sql_inject} \033[1;34;48m-> {ent.amount}EUR, "
               f"Tili: {get_account_name(ent.account_id)}, Selite: {ent.description}\033[1;32;48m")
 
 print("\033[1;37;48m")
@@ -274,9 +276,9 @@ kirjoitus = input("Kirjoita Y/N : ")
 if kirjoitus == "y" or kirjoitus == "Y":
     print('\033[1;33;48mkirjoitetaan', end='')
     for itm in DocList:
-        sv.execute(itm.prepare_insert())
+        sv.execute(itm.sql_inject)
         for ent in itm.entries:
-            sv.execute(ent.prepare_insert())
+            sv.execute(ent.sql_inject)
         print(".", end='')
         time.sleep(0.2)
     svtk.commit()
