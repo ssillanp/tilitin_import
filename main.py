@@ -19,7 +19,9 @@ import json
 import sqlite3
 import sys
 import logging
+from progress.bar import Bar
 from tilitindb import DbDocument, DbEntry, DbPeriod
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -136,10 +138,14 @@ def pankkimalli(action):
                      "datecol": int(datecolumn),
                      "sumcol": int(sumcolumn),
                      "descol": int(desc_column)}
+        print()
+        print("------------------------")
         print(f"Pankkimalli {nimi}:")
         for key, value in csv_model.items():
             print(f"{key} : {value}")
         tallenna = input("Tallenna k/e: ")
+        print("------------------------")
+        print()
         if tallenna.lower() == 'k':
             banks['banks'].append({nimi: [csv_model]})
         else:
@@ -170,11 +176,10 @@ def select_bank():
         for i, bank in enumerate(banks['banks']):
             bank_sel[i + 1] = list(bank.keys())[0]
             print(f"{i + 1} - {bank_sel[i+1]}")
+        print()
+        print("u - syötä uusi, d - poista")
         print('------------------------------')
         print("Valitse malli")
-        print("'u' - syöttää uuden")
-        print("'d' - poistaa")
-        print()
         valinta = input("Valitse: ")
         for i in range(1, len(bank_sel) + 1):
             if valinta.lower() == 'u':
@@ -213,29 +218,32 @@ def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
 
 
 def kirjoita_kantaan(docs_to_add, db_name):
-    print('Kirjoitetaan')
     with sqlite3.connect(db_name) as tilitin_db:
         cursor = tilitin_db.cursor()
-        for itm in docs_to_add:
-            cursor.execute(itm.sql_str)
-            print(itm.sql_str)
-            time.sleep(0.2)
-            for ent in itm.entries:
-                cursor.execute(ent.sql_str)
-                print(ent.sql_str)
-                time.sleep(0.2)
-            # time.sleep(0.2)
-        tilitin_db.commit()
+        with Bar("Kirjoitetaan...", max=len(docs_to_add)*3) as bar:
+            for itm in docs_to_add:
+                cursor.execute(itm.sql_str)
+                # print(itm.sql_str)
+                bar.next()
+                time.sleep(0.1)
+                for ent in itm.entries:
+                    cursor.execute(ent.sql_str)
+                    # print(ent.sql_str)
+                    bar.next()
+                    time.sleep(0.1)
+                # time.sleep(0.2)
+            tilitin_db.commit()
     print()
 
 
 def main():
     db_name, csv_name = parse_args()
+    csv_model = select_bank()
+    csv_data = read_bank_csv(csv_name, csv_model)
     db_limits, db_periods, vientitili_id, vastatili_id = read_db(db_name)
     print_db_info(db_periods, db_limits)
     # vientitili, vastatili = get_tilit()
-    csv_model = select_bank()
-    csv_data = read_bank_csv(csv_name, csv_model)
+
     docs_to_add = create_new_items(csv_data, csv_model, db_limits, vientitili_id, vastatili_id)
     print("ENT DOC ROW ACC DEB        SUM  DESC")
     print("-------------------------------------------------------")

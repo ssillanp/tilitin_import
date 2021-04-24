@@ -21,17 +21,6 @@
           "descol": 1
         }
       ]
-    },
-    {
-      "testi": [
-        {
-          "delimiter": ",",
-          "timeformat": "%d.%m.%Y",
-          "datecol": 0,
-          "sumcol": 2,
-          "descol": 1
-        }
-      ]
     }
   ]
 }
