@@ -12,7 +12,7 @@ class DbEntry:
         self.flags = 0
 
     @property
-    def sql_inject(self):
+    def sql_str(self):
         """Funktio palauttaa SQL lauseen, joka lisää entryn kantaan"""
         return "INSERT INTO entry VALUES ({}, {}, {}, {}, {}, '{}', {}, {})".format(self.id, self.document_id,
                                                                                     self.account_id, self.debit,
@@ -38,7 +38,7 @@ class DbDocument:
         self.entries.append(db_entry)
 
     @property
-    def sql_inject(self):
+    def sql_str(self):
         """Funktio palauttaa SQL lauseen, joka lisää dokumentin kantaan"""
         return "INSERT INTO document VALUES ({}, {}, {}, {})".format(self.id, self.number, self.period_id,
                                                                      self.doc_date)

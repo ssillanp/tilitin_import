@@ -1,9 +1,9 @@
 class bankinfo:
     """Luokka pankkikohtaisille asetuksille"""
-    def __init__(self, bank):
-        self.set_values(self, bank)
+    def __init__(self, binfo):
+        self.set_values(bank)
         
-    def set_values(bank):
+    def set_values(self, bank):
         if bank == 'op':
             self.delimiter =  ';'
             self.timeformat = '%d.%m.%Y'
@@ -22,8 +22,8 @@ class bankinfo:
 #             self.datecol = 0
 #             self.sumcol = 1
 #             self.descol = 5
-#         else:
-#             user_defined()
+        else:
+            user_defined()
 
 
     def user_defined(self):
