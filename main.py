@@ -110,52 +110,73 @@ def print_db_info(db_periods, db_limits):
 
 def get_tilit():
     print("Tapahtumat viedään kantaan tapahtumatilille ja väliaikaiselle vastatilille")
-    vientitili = input("Anna tili, jolle tapahtumat viedään (tapahtimatili) 'q' lopettaa: ")
-    if vientitili.lower() == 'q':
-        sys.exit(0)
-    vastatili = input("Anna vastatili, jolle vienti tehdään (esim.8999) 'q' lopettaa: ")
-    if vastatili.lower() == 'q':
-        sys.exit(0)
+    vientitili = 1911 #input("Anna tili, jolle tapahtumat viedään (tapahtimatili) 'q' lopettaa: ")
+    # if vientitili.lower() == 'q':
+    #     sys.exit(0)
+    vastatili = 4551 #input("Anna vastatili, jolle vienti tehdään (esim.8999) 'q' lopettaa: ")
+    # if vastatili.lower() == 'q':
+    #     sys.exit(0)
     return vientitili, vastatili
 
-
-def select_bank():
-    print("Valitse pankki, tapahtuma csv:n malliin")
-    print("1) OP")
-    print("2) DANSKE")
-    print("3) Syötä oma malli")
-    while True:
-        bank = input("Valitse CSV malli: ")
-        try:
-            bank = int(bank)
-            if bank not in [1, 2, 3]:
-                raise ValueError
-            break
-        except ValueError:
-            print(f"Valinta ei kelpaa, valitse 1, 2, tai 3")
-            continue
-    if bank == 1:
-        bankname = 'op'
-    elif bank == 2:
-        bankname = 'danske'
-    elif bank == 3:
-        bankname = 'user'
+def uusi_pankkimalli():
     try:
         with open('bank_csv.json', 'r') as f:
-            binfo = json.load(f)['banks'][bank-1][bankname][0]
-            print(binfo)
+            banks = json.load(f)
     except FileNotFoundError:
         print("'bank_csv.json' tiedostoa ei löydy")
-        binfo = None
+        return None
 
-    return binfo
+    print("Syötä uusi pankkimalli: ")
+    nimi = input("Pankin nimi: ")
+    delimiter = input("Kenttäerotin [,]: ") or ","
+    timeformat = input("Timeformat [%d.%m.%Y]: ") or "%d.%m.%Y"
+    datecolumn = input("Päivämäärän sarake [0]: ") or 0
+    sumcolumn = input("Summan sarake [2]: ") or 2
+    desc_column = input("Kuvauksen sarake [1]: ") or 1
+    csv_model = {"delimiter": delimiter,
+                 "timeformat": timeformat,
+                 "datecol": int(datecolumn),
+                 "sumcol": int(sumcolumn),
+                 "descol": int(desc_column)}
+    banks['banks'].append({nimi: [csv_model]})
+    with open('bank_csv.json', 'w') as f:
+        json.dump(banks, f, indent=2)
+
+    return csv_model
+
+def select_bank():
+    bank_sel = {}
+    csv_model = {}
+    try:
+        with open('bank_csv.json', 'r') as f:
+            banks = json.load(f)
+    except FileNotFoundError:
+        print("'bank_csv.json' tiedostoa ei löydy")
+        return None
+    print("Löytyi seuraavat csv mallit:  ")
+    print('------------------------------')
+    for i, bank in enumerate(banks['banks']):
+        bank_sel[i + 1] = list(bank.keys())[0]
+        print(f"{i + 1} - {bank_sel[i+1]}")
+    print('------------------------------')
+    print()
+    valinta = input("Valitse malli, ('u'-syöttää uuden): ")
+    for i in range(1, len(bank_sel) + 1):
+        if valinta.lower() == 'u':
+            csv_model = uusi_pankkimalli()
+            break
+        elif int(valinta) == i:
+            csv_model = banks['banks'][i-1][bank_sel[i]][0]
+            print(csv_model)
+            break
+    return csv_model
 
 
 def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
     docs = []
     # print(csv_model)
     for d, tapahtuma in enumerate(csv_data[1:]):
-        print(tapahtuma)
+        # print(tapahtuma)
         doc_date = int(time.mktime(datetime.datetime.strptime(f"{tapahtuma[csv_model['datecol']]}",
                                                               csv_model['timeformat']).timetuple()) * 1000)
         docs.append(DbDocument(db_limits['last_document_id'] + d + 1,  db_limits['last_document_number'] + d + 1,
@@ -205,6 +226,7 @@ def main():
         for ent in item.entries:
             print(ent)
     print("-------------------------------------------------------")
+    print()
     while True:
         kirjoitus = input("Kirjoitetaanko tiedot kantaan ? k/e : ")
         if kirjoitus.lower() == 'k':

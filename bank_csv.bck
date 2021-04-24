@@ -1,0 +1,18 @@
+{
+  "banks": [
+    {"op": [
+      { "delimiter":  ";",
+        "timeformat": "%d.%m.%Y",
+        "datecol": 0,
+        "sumcol": 2,
+        "descol": 6  }
+    ]},
+    {"danske": [
+      { "delimiter":  ",",
+        "timeformat": "%d.%m.%Y",
+        "datecol": 0,
+        "sumcol": 2,
+        "descol": 1  }
+    ]}
+  ]
+}

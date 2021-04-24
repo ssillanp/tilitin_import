@@ -75,4 +75,4 @@ class DbPeriod:
         self.startDate = start_date
         self.endDate = end_date
         self.locked = int(locked)
-        print(self.id, self.startDate, self.endDate, self.locked)
+        # print(self.id, self.startDate, self.endDate, self.locked)
