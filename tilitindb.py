@@ -31,7 +31,7 @@ class DbEntry:
                f"{str(self.row_number).rjust(3)} " \
                f"{str(self.account_id).rjust(3)} " \
                f"{str(self.debit).rjust(3)} " \
-               f"{str(amt).rjust(10)}  " \
+               f"{f'{amt:.2f}'.rjust(10)}  " \
                f"{self.description}" \
 
 

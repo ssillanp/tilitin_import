@@ -116,27 +116,39 @@ def get_tilit():
     return vientitili, vastatili
 
 
-def uusi_pankkimalli():
+def pankkimalli(action):
     try:
         with open('bank_csv.json', 'r') as f:
             banks = json.load(f)
     except FileNotFoundError:
         print("'bank_csv.json' tiedostoa ei löydy")
         return None
-
-    print("Syötä uusi pankkimalli: ")
-    nimi = input("Pankin nimi: ")
-    delimiter = input("Kenttäerotin [,]: ") or ","
-    timeformat = input("Timeformat [%d.%m.%Y]: ") or "%d.%m.%Y"
-    datecolumn = input("Päivämäärän sarake [0]: ") or 0
-    sumcolumn = input("Summan sarake [2]: ") or 2
-    desc_column = input("Kuvauksen sarake [1]: ") or 1
-    csv_model = {"delimiter": delimiter,
-                 "timeformat": timeformat,
-                 "datecol": int(datecolumn),
-                 "sumcol": int(sumcolumn),
-                 "descol": int(desc_column)}
-    banks['banks'].append({nimi: [csv_model]})
+    if action:
+        print("Syötä uusi pankkimalli: ")
+        nimi = input("Pankin nimi: ")
+        delimiter = input("Kenttäerotin [,]: ") or ","
+        timeformat = input("Timeformat [%d.%m.%Y]: ") or "%d.%m.%Y"
+        datecolumn = input("Päivämäärän sarake [0]: ") or 0
+        sumcolumn = input("Summan sarake [2]: ") or 2
+        desc_column = input("Kuvauksen sarake [1]: ") or 1
+        csv_model = {"delimiter": delimiter,
+                     "timeformat": timeformat,
+                     "datecol": int(datecolumn),
+                     "sumcol": int(sumcolumn),
+                     "descol": int(desc_column)}
+        print(f"Pankkimalli {nimi}:")
+        for key, value in csv_model.items():
+            print(f"{key} : {value}")
+        tallenna = input("Tallenna k/e: ")
+        if tallenna.lower() == 'k':
+            banks['banks'].append({nimi: [csv_model]})
+        else:
+            csv_model = False
+            pass
+    else:
+        nro = input("Valitse poistettava pankkimalli: ")
+        banks['banks'].pop(int(nro)-1)
+        csv_model = False
     with open('bank_csv.json', 'w') as f:
         json.dump(banks, f, indent=2)
 
@@ -145,29 +157,35 @@ def uusi_pankkimalli():
 
 def select_bank():
     bank_sel = {}
-    csv_model = {}
-    try:
-        with open('bank_csv.json', 'r') as f:
-            banks = json.load(f)
-    except FileNotFoundError:
-        print("'bank_csv.json' tiedostoa ei löydy")
-        return None
-    print("Löytyi seuraavat csv mallit:  ")
-    print('------------------------------')
-    for i, bank in enumerate(banks['banks']):
-        bank_sel[i + 1] = list(bank.keys())[0]
-        print(f"{i + 1} - {bank_sel[i+1]}")
-    print('------------------------------')
-    print()
-    valinta = input("Valitse malli, ('u'-syöttää uuden): ")
-    for i in range(1, len(bank_sel) + 1):
-        if valinta.lower() == 'u':
-            csv_model = uusi_pankkimalli()
-            break
-        elif int(valinta) == i:
-            csv_model = banks['banks'][i-1][bank_sel[i]][0]
-            print(csv_model)
-            break
+    csv_model = False
+    while not csv_model:
+        try:
+            with open('bank_csv.json', 'r') as f:
+                banks = json.load(f)
+        except FileNotFoundError:
+            print("'bank_csv.json' tiedostoa ei löydy")
+            return None
+        print("Löytyi seuraavat csv mallit:  ")
+        print('------------------------------')
+        for i, bank in enumerate(banks['banks']):
+            bank_sel[i + 1] = list(bank.keys())[0]
+            print(f"{i + 1} - {bank_sel[i+1]}")
+        print('------------------------------')
+        print("Valitse malli")
+        print("'u' - syöttää uuden")
+        print("'d' - poistaa")
+        print()
+        valinta = input("Valitse: ")
+        for i in range(1, len(bank_sel) + 1):
+            if valinta.lower() == 'u':
+                csv_model = pankkimalli(True)
+                break
+            elif valinta.lower() == 'd':
+                csv_model = pankkimalli(False)
+                break
+            elif int(valinta) == i:
+                csv_model = banks['banks'][i-1][bank_sel[i]][0]
+                break
     return csv_model
 
 
