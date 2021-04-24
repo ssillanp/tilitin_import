@@ -1,3 +1,4 @@
+from datetime import datetime
 class DbEntry:
     """Luokka vastaa kannan entry taulun rakennetta"""
 
@@ -6,7 +7,7 @@ class DbEntry:
         self.document_id = int(document_id)
         self.account_id = int(account_id)
         self.debit = int(debit)
-        self.amount = abs(float(amount.replace(',', '.').replace(' ', '').strip()))
+        self.amount = amount
         self.description = description
         self.row_number = int(row_number)
         self.flags = 0
@@ -20,6 +21,21 @@ class DbEntry:
                                                                                     self.row_number, self.flags)
 
 
+    def __str__(self):
+        if self.debit:
+            amt = self.amount
+        else:
+            amt = self.amount * -1
+        return f"{str(self.id).rjust(3)} " \
+               f"{str(self.document_id).rjust(3)} " \
+               f"{str(self.row_number).rjust(3)} " \
+               f"{str(self.account_id).rjust(3)} " \
+               f"{str(self.debit).rjust(3)} " \
+               f"{str(amt).rjust(10)}  " \
+               f"{self.description}" \
+
+
+
 class DbDocument:
     """luokka vastaa kannan document taulun rakennetta"""
 
@@ -30,8 +46,6 @@ class DbDocument:
         self.doc_date = doc_date
         self.entries = []
 
-    def __lt__(self, other):
-        return self.doc_date < other.doc_date
 
     def add_entry(self, db_entry):
         """Funktio lisää dokumentille entryn"""
@@ -42,6 +56,15 @@ class DbDocument:
         """Funktio palauttaa SQL lauseen, joka lisää dokumentin kantaan"""
         return "INSERT INTO document VALUES ({}, {}, {}, {})".format(self.id, self.number, self.period_id,
                                                                      self.doc_date)
+    def __str__(self):
+        return f"{self.id} {self.number} {datetime.utcfromtimestamp(self.doc_date / 1000).strftime('%d.%m.%Y')} " \
+               f"{self.period_id}"
+
+    def __lt__(self, other):
+        return self.doc_date < other.doc_date
+
+    def __gt__(self, other):
+        return self.doc_date > other.doc_date
 
 
 class DbPeriod:

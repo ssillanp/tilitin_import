@@ -8,7 +8,7 @@
         "descol": 6  }
     ]},
     {"danske": [
-      { "delimiter":  ";",
+      { "delimiter":  ",",
         "timeformat": "%d.%m.%Y",
         "datecol": 0,
         "sumcol": 2,
