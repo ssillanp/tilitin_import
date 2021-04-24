@@ -29,8 +29,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-
-
 def parse_args():
     args = sys.argv[1:]
     if len(args) == 2:
@@ -51,7 +49,7 @@ def read_db(db_name):
     with sqlite3.connect(db_name) as tilitin_db:
         cursor = tilitin_db.cursor()
         cursor.execute('SELECT max(id) FROM document')
-        db_limits['last_document_id']  = cursor.fetchone()[0]
+        db_limits['last_document_id'] = cursor.fetchone()[0]
         # print(last_document_id)
         cursor.execute(f"SELECT number FROM document WHERE id={db_limits['last_document_id']}")
         db_limits['last_document_number'] = cursor.fetchone()[0]
@@ -70,14 +68,12 @@ def read_db(db_name):
     return db_limits, db_periods, vientitili_id, vastatili_id
 
 
-
-
 def read_bank_csv(csv_name, csv_model):
-    tapahtumat = []
     with codecs.open(csv_name, encoding='unicode_escape') as csvfile:
         csv_data = list(csv.reader(csvfile, delimiter=csv_model['delimiter']))
     # print(csv_data)
     return csv_data
+
 
 def get_account_id(db_name, account_no):
     """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
@@ -86,6 +82,7 @@ def get_account_id(db_name, account_no):
         cursor.execute(f'SELECT id FROM account WHERE number = {account_no}')
         result = cursor.fetchone()[0]
         return result
+
 
 def get_account_name(db_name, account_id):
     """Funktio hakee kannasta tilin nimen annetun  id:n perusteella"""
@@ -110,13 +107,14 @@ def print_db_info(db_periods, db_limits):
 
 def get_tilit():
     print("Tapahtumat viedään kantaan tapahtumatilille ja väliaikaiselle vastatilille")
-    vientitili = 1911 #input("Anna tili, jolle tapahtumat viedään (tapahtimatili) 'q' lopettaa: ")
+    vientitili = input("Anna tili, jolle tapahtumat viedään (tapahtimatili) 'q' lopettaa: ")
     # if vientitili.lower() == 'q':
     #     sys.exit(0)
-    vastatili = 4551 #input("Anna vastatili, jolle vienti tehdään (esim.8999) 'q' lopettaa: ")
+    vastatili = input("Anna vastatili, jolle vienti tehdään (esim.8999) 'q' lopettaa: ")
     # if vastatili.lower() == 'q':
     #     sys.exit(0)
     return vientitili, vastatili
+
 
 def uusi_pankkimalli():
     try:
@@ -143,6 +141,7 @@ def uusi_pankkimalli():
         json.dump(banks, f, indent=2)
 
     return csv_model
+
 
 def select_bank():
     bank_sel = {}
@@ -194,6 +193,7 @@ def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
 
     return docs
 
+
 def kirjoita_kantaan(docs_to_add, db_name):
     print('Kirjoitetaan')
     with sqlite3.connect(db_name) as tilitin_db:
@@ -211,11 +211,10 @@ def kirjoita_kantaan(docs_to_add, db_name):
     print()
 
 
-
 def main():
     db_name, csv_name = parse_args()
     db_limits, db_periods, vientitili_id, vastatili_id = read_db(db_name)
-    last_period_id = print_db_info(db_periods, db_limits)
+    print_db_info(db_periods, db_limits)
     # vientitili, vastatili = get_tilit()
     csv_model = select_bank()
     csv_data = read_bank_csv(csv_name, csv_model)
@@ -236,10 +235,6 @@ def main():
             break
         else:
             print('Valintse k/e : ')
-
-
-
-
 
 
 if __name__ == '__main__':
