@@ -1,98 +1,113 @@
-##tilitin_import.py lyhyt käyttöohje
+### tilitin_import.py lyhyt käyttöohje
 
 Käyttö:
-> python3 tilitin_import.py [tilitin_tietokanta.sqlite] [tapahtumat_csv.csv]
 
-Skripti lukee kannasta tilikaudet ja tulostaa ne ruudulle:
+`python3 tilitin_import.py [tilitin_tietokanta.sqlite] [tapahtumat_csv.csv]`
 
-
-> Tietokannassa kanta.sqlite on tilikausia 4 kappaletta
-> 
-> [2] 31.12.2015 - 30.12.2016 Lukittu: 1\
-> [4] 31.12.2016 - 30.12.2017 Lukittu: 1\
-> [5] 31.12.2017 - 30.12.2018 Lukittu: 0\
-> [6] 31.12.2018 - 30.12.2019 Lukittu: 0
-> 
-> Anna tilikausi: 6
+Luetaan valmiit pankkien csv mallit:
 
 
-Syötä käytettävän tilikauden numero. Kausi ei saa olla lukittu. Mikäli tuot tapahtumat uudelle tilikaudelle,
-luo se ensi tilittimessä, jotta alkusaldot tulevat oikein.
-Seuraavaksi skripti kytyy käytettänän pankin csv mallin:
+```
+Löytyi seuraavat csv mallit:
+------------------------------
+1 - op
+2 - danske
 
-> Valittu tilikausi 6
-> Valitse tapahtumaluettelon (.csv) malli
-> 
-> [1] - Osuuspankki\
-> [2] - Danske Bank\
-> [3] - Nodrea (ei käytössä vielä)\
-> [4] - Määrittele itse
-> 
-> valitse: 2
+u - syötä uusi, d - poista
+------------------------------
+Valitse malli
+Valitse: 
+```
+Valitse malli tai syötä uusi (u) tai poista olemassa oleva (d):
 
-Anna valittu malli tai syötä arvot itse, valitsemalla [4]. Malli pitää sisällään
-- csv:n erottimen "**,**" tai "**;**"
-- Päivämääräformaatin esim: "**%d.%m.%Y**" tai "**%m/%d/%y**" (vrt. python datetime)
-- Päivämääräsarakkeen numeron
-- Summasarakkeen numeron
-- Desc-sarakkeen numeron (esim: maksaja/saaja)
+```
+Valitse: u
+Syötä uusi pankkimalli: 
+Pankin nimi: pop
+Kenttäerotin [,]: 
+Timeformat [%d.%m.%Y]: 
+Päivämäärän sarake [0]: 
+Summan sarake [2]: 
+Kuvauksen sarake [1]: 
+Desimaalierotin [,]: 
 
-> Löytyi 6 Saraketta
-> 
-> [0]  Pvm\
-> [1]  Saaja/Maksaja\
-> [2]  Mara\
-> [3]  Saldo\
-> [4]  Tila\
-> [5]  Tarkastus
-> 
-> Voit syöttää joko vain tapahtumatilin ja antaa vastatilit tilittimessä,
-> tai voit syöttää myös vastatilit nyt
-> 
-> [1] - Vain tapahtumatili, vastatilit tilittimessä
-> [2] - Myös vastatilit nyt
-> 
-> Valitse [1]: 1
+------------------------
+Pankkimalli pop:
+delimiter : ,
+timeformat : %d.%m.%Y
+datecol : 0
+sumcol : 2
+descol : 1
+decimal : ,
+Tallenna k/e: k
+```
 
-Skripti listaa löytyneet sarakkeet ja pyytää valitsemaan syöttötavan:
-[1] - Syötä alussa tapahtumatili, jolle tapahtumat viedään, voit lisätä vastatilit tilittimessä.
-[2] - Syötä tapahtumatilit ja vastatilit tässä.
+tai poista olemassa oleva (d):
 
-Mikäli valitset 1, kysyy skripti tapahtumatilin numeron ja ajaa tapahtumat ko. tilille. 
-Mikäli valitset 2, kysyy skripti jokaisen tapahtuman kohdalla tapahtuma- va vastatilin numeron. 
-Skripti muistaa edellisen valinnan, jonka voi kuitata enterillä. Vatatilin syötön voi myös skipata valitsemalla "s".
-  
-> Syötä tili jolle tapahtumat viedään: 1911\
-> 07.11.2019, -1566.76, Yritys A Oy\
-> 02.12.2019, -620, Kuljetus AB Oy\
-> 31.12.2019, -0.2, Lahdevero\
-> 31.12.2019, 0.73, Korko\
-> 17.02.2020, -334.8, Pekka Pee\
-> Vienti ei ole annetulla tilikaudella, skipataan...\
-> Kirjoitetaanko seuraavat rivit kantaan:
-> 
-> INSERT INTO document VALUES (177, 42, 6, 1573077600000)\
->->  Dokumentille 42, Vientipäivämäärä 06.11.2019\
->  INSERT INTO entry VALUES (351, 177, 12, 1, 1566.76, 'Yritys A Oy', 0, 0)\
->->  1566.76EUR, Tili: Pankkitili, Selite: Yritys A Oy
-> 
-> INSERT INTO document VALUES (178, 43, 6, 1575237600000)\
->->  Dokumentille 43, Vientipäivämäärä 01.12.2019\
->  INSERT INTO entry VALUES (353, 178, 12, 1, 620.0, 'Kuljetus AB Oy', 0, 0)\
->->  620.0EUR, Tili: Pankkitili, Selite: Kuljetus AB Oy
-> 
-> INSERT INTO document VALUES (179, 44, 6, 1577743200000)\
->->  Dokumentille 44, Vientipäivämäärä 30.12.2019\
->  INSERT INTO entry VALUES (355, 179, 12, 1, 0.2, 'Lahdevero', 0, 0)\
->->  0.2EUR, Tili: Pankkitili, Selite: Lahdevero
-> 
-> INSERT INTO document VALUES (180, 45, 6, 1577743200000)\
->->  Dokumentille 45, Vientipäivämäärä 30.12.2019\
->  INSERT INTO entry VALUES (357, 180, 12, 0, 0.73, 'Korko', 0, 0)\
->->  0.73EUR, Tili: Pankkitili, Selite: Korko
-> 
-> Kirjoita Y/N : 
+```
+Valitse: d
+Valitse poistettava pankkimalli, 'q'-lopettaa: q
+```
 
-Valitse Y,kirjoittaksesi tapahtumat tilitin kantaan.
-````````
+Anna tilinumerot joille viennit tehdään. Vastatilinä voi käyttää väliaikaista tiliä, 
+josta siirtää tapahtumat oikeille tileille tilittimessä. Tai esimerkiksi tiliä jolle enen osa tapahtumista kuuluu, 
+jolloin työtä tilittimessä on vähemmän.
 
+```
+Tapahtumat viedään kantaan tapahtumatilille ja väliaikaiselle vastatilille
+Anna tili, jolle tapahtumat viedään (tapahtimatili): 1911
+Anna vastatili, jolle vienti tehdään (esim.8999): 8999
+```
+
+Luetaan kannasta tilikaudet ja valitaan uusin tilikausi, jolle tapahtumat viedään. valitse 'k' mikäli tilikausi oikein
+
+```
+Kannasta löytyvät seuraavat tilikaudet: 
+ID  Vuosi  Lukittu
+--  -----  -------
+1   2020   Ei
+
+Uudet tapahtumat lisätään tilikaudelle 1
+Jatka k/e [k]: k
+```
+
+Tulostetaan rivit wennen kantaan vientiä
+DOC = DokumenttiId kannassa
+DNO = Dokumenttinumero
+DATE = Tapahtumapäivä
+PER = Tilikauden Id
+ENT = Viennin Id
+ROW = Viennin dokumenttirivi
+ACC = TilinId
+DEB = 0 jos rahaa ulos, 1 jos sisään.
+SUM = Summa
+DESC = Kuvaus
+
+
+```
+ DOC DNO    DATE    PER ENT DOC ROW ACC DEB        SUM  DESC
+-----------------------------------------------------------------------------------
+ 125 124 27.12.2020   1 247 125   1  12   0    -620.00  Selite 1
+ 125 124 27.12.2020   1 248 125   2  12   1     620.00  Selite 1
+ 126 125 20.10.2020   1 249 126   1  12   0   -1146.13  Selite 2
+ 126 125 20.10.2020   1 250 126   2  12   1    1146.13  Selite 2
+ 127 126 06.10.2020   1 251 127   1  12   0    -207.60  Selite 3
+ 127 126 06.10.2020   1 252 127   2  12   1     207.60  Selite 3
+ 128 127 07.09.2020   1 253 128   1  12   0    -127.94  Selite 4
+ 128 127 07.09.2020   1 254 128   2  12   1     127.94  Selite 4
+ 129 128 03.09.2020   1 255 129   1  12   1     915.00  Selite 5
+ 129 128 03.09.2020   1 256 129   2  12   0    -915.00  Selite 5
+ 130 129 05.07.2020   1 257 130   1  12   1     132.60  Selite 6
+ 130 129 05.07.2020   1 258 130   2  12   0    -132.60  Selite 6
+ 131 130 16.06.2020   1 259 131   1  12   0    -148.80  Selite 7
+ 131 130 16.06.2020   1 260 131   2  12   1     148.80  Selite 7
+ 132 131 15.06.2020   1 261 132   1  12   1     172.60  Selite 8
+ 132 131 15.06.2020   1 262 132   2  12   0    -172.60  Selite 8
+ 133 132 08.06.2020   1 263 133   1  12   1      79.60  Selite 9
+ 133 132 08.06.2020   1 264 133   2  12   0     -79.60  Selite 9
+-----------------------------------------------------------------------------------
+
+Kirjoitetaanko tiedot kantaan ? k/e : k
+Kirjoitetaan... |################################| 27/27
+
+```

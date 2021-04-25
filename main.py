@@ -17,6 +17,7 @@ import datetime
 import time
 import sqlite3
 import sys
+import os
 import logging
 import pickle
 from progress.bar import Bar
@@ -36,7 +37,7 @@ def parse_args():
     :return: database filename as db_name, csv filename as csv_name
     """
     args = sys.argv[1:]
-    print(args)
+    # print(args)
     if len(args) == 2:
         db_name = str(args[0])
         csv_name = str(args[1])
@@ -75,11 +76,11 @@ def read_db(db_name):
                 db_periods.append(DbPeriod(period[0], period[1], period[2], period[3]))
             db_limits['last_period_id'] = db_periods[-1].id
             db_limits['last_period_year'] = datetime.datetime.utcfromtimestamp(db_periods[-1].endDate / 1000).strftime('%Y')
-            print(db_limits)
+            # print(db_limits)
             tili = vientitili
             cursor.execute(f"SELECT id FROM account WHERE number={tili}")
             vientitili_id = cursor.fetchone()[0]
-            tilti = vastatili
+            tili = vastatili
             cursor.execute(f"SELECT id FROM account WHERE number={tili}")
             vastatili_id = cursor.fetchone()[0]
             logger.debug('DB OK - read_db()')
@@ -162,6 +163,9 @@ def print_db_info(db_periods, db_limits):
               f" {'Kyllä' if item.locked == 1 else 'Ei'}")
     print()
     print(f"Uudet tapahtumat lisätään tilikaudelle {db_limits['last_period_id']}")
+    valinta = input("Jatka k/e [k]: ") or 'k'
+    if valinta.lower() != 'k':
+        sys.exit(0)
     return None
 
 
@@ -226,7 +230,10 @@ def pankkimalli(action):
                 continue
 
         else:
-            nro = input("Valitse poistettava pankkimalli: ")
+            nro = input("Valitse poistettava pankkimalli, 'q'-lopettaa: ")
+            if nro.lower() == 'q':
+                csv_model = False
+                break
             try:
                 banks.pop(list(banks.keys())[int(nro)-1])
                 logger.debug(f"BANK REMOVED, index='{nro}'")
@@ -386,12 +393,15 @@ def main():
     """ Main Loop
     :return: None
     """
+    os.system('clear')
     logger.info("STARTED")
     db_name, csv_name = parse_args()
     csv_model = select_bank()
     csv_data = read_bank_csv(csv_name, csv_model)
     db_limits, db_periods, vientitili_id, vastatili_id = read_db(db_name)
+    os.system('clear')
     print_db_info(db_periods, db_limits)
+    os.system('clear')
     # vientitili, vastatili = get_tilit()
 
     docs_to_add = create_new_items(csv_data, csv_model, db_limits, vientitili_id, vastatili_id)
