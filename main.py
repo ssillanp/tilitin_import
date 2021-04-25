@@ -62,7 +62,9 @@ def read_db(db_name):
         periods = cursor.fetchall()
         for period in periods:
             db_periods.append(DbPeriod(period[0], period[1], period[2], period[3]))
-        db_limits['last_period_id'] = max(item.id for item in db_periods)
+        db_limits['last_period_id'] = db_periods[-1].id
+        db_limits['last_period_year'] = datetime.datetime.utcfromtimestamp(db_periods[-1].endDate / 1000).strftime('%Y')
+        print(db_limits)
         cursor.execute(f"SELECT id FROM account WHERE number={vientitili}")
         vientitili_id = cursor.fetchone()[0]
         cursor.execute(f"SELECT id FROM account WHERE number={vastatili}")
@@ -198,9 +200,15 @@ def select_bank():
 
 def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
     docs = []
-    print(db_limits)
+    # print(db_limits)
     for d, tapahtuma in enumerate(csv_data[1:]):
         # print(tapahtuma)
+        tapahtuma_year  = datetime.datetime.strptime(tapahtuma[csv_model['datecol']], csv_model['timeformat']).year
+        if tapahtuma_year != int(db_limits['last_period_year']):
+            print(f"{tapahtuma[csv_model['datecol']]} : {tapahtuma[csv_model['sumcol']]} : {tapahtuma[csv_model['descol']]}"
+                  f" ei ole vienti-tilikaudella, skipataan...")
+            input("Paina enter jatkaaksesi...")
+            continue
         doc_date = int(time.mktime(datetime.datetime.strptime(f"{tapahtuma[csv_model['datecol']]}",
                                                               csv_model['timeformat']).timetuple()) * 1000)
         docs.append(DbDocument(db_limits['last_document_id'] + d + 1,  db_limits['last_document_number'] + d + 1,
