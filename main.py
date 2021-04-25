@@ -26,13 +26,16 @@ from tilitindb import DbDocument, DbEntry, DbPeriod
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 file_handler = logging.FileHandler('tilitin_import.log')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
 def parse_args():
+    """ Funktion parses arguments from command
+    :return: database filename as db_name, csv filename as csv_name
+    """
     args = sys.argv[1:]
     if len(args) == 2:
         db_name = str(args[0])
@@ -46,59 +49,107 @@ def parse_args():
 
 
 def read_db(db_name):
+    """ Funtion reads from tilitin database
+    :param db_name: database name
+    :return: database limits ad db_limits (dict)
+    :return: db_periods list of DbPeriod Objects (list)
+    :return: vientitili_id db Id for the debit account to store
+    :return: vastatili_id db Id for credit account
+    """
     db_limits = {}
     db_periods = []
     vientitili, vastatili = get_tilit()
-    with sqlite3.connect(db_name) as tilitin_db:
-        cursor = tilitin_db.cursor()
-        cursor.execute('SELECT max(id) FROM document')
-        db_limits['last_document_id'] = cursor.fetchone()[0]
-        # print(last_document_id)
-        cursor.execute(f"SELECT number FROM document WHERE id={db_limits['last_document_id']}")
-        db_limits['last_document_number'] = cursor.fetchone()[0]
-        cursor.execute('SELECT max(id) FROM entry')
-        db_limits['last_entry_id'] = cursor.fetchone()[0] or 0
-        cursor.execute('SELECT * FROM period')
-        periods = cursor.fetchall()
-        for period in periods:
-            db_periods.append(DbPeriod(period[0], period[1], period[2], period[3]))
-        db_limits['last_period_id'] = db_periods[-1].id
-        db_limits['last_period_year'] = datetime.datetime.utcfromtimestamp(db_periods[-1].endDate / 1000).strftime('%Y')
-        print(db_limits)
-        cursor.execute(f"SELECT id FROM account WHERE number={vientitili}")
-        vientitili_id = cursor.fetchone()[0]
-        cursor.execute(f"SELECT id FROM account WHERE number={vastatili}")
-        vastatili_id = cursor.fetchone()[0]
+    try:
+        with sqlite3.connect(db_name) as tilitin_db:
+            cursor = tilitin_db.cursor()
+            cursor.execute('SELECT max(id) FROM document')
+            db_limits['last_document_id'] = cursor.fetchone()[0]
+            # print(last_document_id)
+            cursor.execute(f"SELECT number FROM document WHERE id={db_limits['last_document_id']}")
+            db_limits['last_document_number'] = cursor.fetchone()[0]
+            cursor.execute('SELECT max(id) FROM entry')
+            db_limits['last_entry_id'] = cursor.fetchone()[0] or 0
+            cursor.execute('SELECT * FROM period')
+            periods = cursor.fetchall()
+            for period in periods:
+                db_periods.append(DbPeriod(period[0], period[1], period[2], period[3]))
+            db_limits['last_period_id'] = db_periods[-1].id
+            db_limits['last_period_year'] = datetime.datetime.utcfromtimestamp(db_periods[-1].endDate / 1000).strftime('%Y')
+            print(db_limits)
+            cursor.execute(f"SELECT id FROM account WHERE number={vientitili}")
+            vientitili_id = cursor.fetchone()[0]
+            cursor.execute(f"SELECT id FROM account WHERE number={vastatili}")
+            vastatili_id = cursor.fetchone()[0]
+            logger.debug('DB OK - read_db()')
+    except sqlite3.OperationalError:
+        logger.error(f'DB ERROR (read_db()) db:{db_name}')
+        print(f"Tietokantaa '{db_name} ei voitu avata, tai tietokanta ei ole tilitin-kanta")
+        sys.exit(0)
 
     return db_limits, db_periods, vientitili_id, vastatili_id
 
 
 def read_bank_csv(csv_name, csv_model):
-    with codecs.open(csv_name, encoding='unicode_escape') as csvfile:
-        csv_data = list(csv.reader(csvfile, delimiter=csv_model['delimiter']))
-    # print(csv_data)
-    return csv_data
+    """ Read data from given csv-file
+    :param csv_name: csv filename
+    :param csv_model: bank model of the selected csv
+    :return: data from the csv as csv_data (list)
+    """
+    csv_name = ""
+    try:
+        with codecs.open(csv_name, encoding='unicode_escape') as csvfile:
+            csv_data = list(csv.reader(csvfile, delimiter=csv_model['delimiter']))
+        logger.debug('csv OK')
+        return csv_data
+    except FileNotFoundError:
+        logger.error(f"CSV ERROR, csv:'{csv_name}'")
+        print(f"Tapahtumatiedostoa {csv_name} ei ole")
+        sys.exit(0)
 
 
 def get_account_id(db_name, account_no):
-    """Funktio hakee kannasta tilin id:n annetun  tilinumeron perusteella"""
-    with sqlite3.connect(db_name) as tilitin_db:
-        cursor = tilitin_db.cursor()
-        cursor.execute(f'SELECT id FROM account WHERE number = {account_no}')
-        result = cursor.fetchone()[0]
+    """ Function get account id from db based on account no
+    :param db_name: db_filename
+    :param account_no: number of the account
+    :return: id of the account
+    """
+    try:
+        with sqlite3.connect(db_name) as tilitin_db:
+            cursor = tilitin_db.cursor()
+            cursor.execute(f'SELECT id FROM account WHERE number = {account_no}')
+            result = cursor.fetchone()[0]
+        logger.debug('DB OK - get_account_id()')
         return result
-
+    except sqlite3.OperationalError:
+        logger.error(f'DB ERROR (get_account_id()), db:{db_name}')
+        print(f"Tietokantaa '{db_name} ei voitu avata, tai tietokanta ei ole tilitin-kanta")
+        sys.exit(0)
 
 def get_account_name(db_name, account_id):
-    """Funktio hakee kannasta tilin nimen annetun  id:n perusteella"""
-    with sqlite3.connect(db_name) as tilitin_db:
-        cursor = tilitin_db.cursor()
-        cursor.execute(f'SELECT name FROM account WHERE id = {account_id}')
-        result = cursor.fetchone()[0]
-    return result
+    """ Function returns the name of the account, with given number
+    :param db_name: database filename
+    :param account_id: Id of the requested account
+    :return: Name of the account with given Id
+    """
+    try:
+        with sqlite3.connect(db_name) as tilitin_db:
+            cursor = tilitin_db.cursor()
+            cursor.execute(f'SELECT name FROM account WHERE id = {account_id}')
+            result = cursor.fetchone()[0]
+        logger.debug('DB OK - get_account_name()')
+        return result
+    except sqlite3.OperationalError:
+        logger.error(f'DB ERROR (get_account_name()), db:{db_name}')
+        print(f"Tietokantaa '{db_name} ei voitu avata, tai tietokanta ei ole tilitin-kanta")
+        sys.exit(0)
 
 
 def print_db_info(db_periods, db_limits):
+    """ Function prints the periods found in db for user info
+    :param db_periods: periods in db, as a list of DbPariod-items (list)
+    :param db_limits: info about the db as db_limits (dict)
+    :return: None
+    """
     print("Kannasta löytyvät seuraavat tilikaudet: ")
     print("ID  Vuosi  Lukittu")
     print("--  -----  -------")
@@ -111,57 +162,82 @@ def print_db_info(db_periods, db_limits):
 
 
 def get_tilit():
+    """ Function asks for the debit and credit accoun numbers from user and returns them
+    :return: debit account as vientitili (str), credit account as vastatili (str)
+    """
     print("Tapahtumat viedään kantaan tapahtumatilille ja väliaikaiselle vastatilille")
-    vientitili = input("Anna tili, jolle tapahtumat viedään (tapahtimatili) 'q' lopettaa: ")
-    # if vientitili.lower() == 'q':
-    #     sys.exit(0)
-    vastatili = input("Anna vastatili, jolle vienti tehdään (esim.8999) 'q' lopettaa: ")
-    # if vastatili.lower() == 'q':
-    #     sys.exit(0)
+    vientitili = input("Anna tili, jolle tapahtumat viedään (tapahtimatili): ")
+    vastatili = input("Anna vastatili, jolle vienti tehdään (esim.8999): ")
     return vientitili, vastatili
 
 
 def pankkimalli(action):
+    """ Function creates or deletes a bank csv_model (user given)
+    :param action: Create - True, Delete - False
+    :return: bank csv_model (dict), False if cancelled or deleted
+    """
     try:
         with open('banks.pkl', 'rb') as f:
             banks = pickle.load(f)
+        logger.debug(f"BANK MODEL READ PICKLE OK")
     except FileNotFoundError:
+        logger.error(f"ERROR BANK PICKLE READING- NOT FOUND")
         print("'banks.pkl' tiedostoa ei löydy")
         return None
-    if action:
-        print("Syötä uusi pankkimalli: ")
-        nimi = input("Pankin nimi: ")
-        delimiter = input("Kenttäerotin [,]: ") or ","
-        timeformat = input("Timeformat [%d.%m.%Y]: ") or "%d.%m.%Y"
-        datecolumn = input("Päivämäärän sarake [0]: ") or 0
-        sumcolumn = input("Summan sarake [2]: ") or 2
-        desc_column = input("Kuvauksen sarake [1]: ") or 1
-        decimal_sep = input("Desimaalierotin [,]: ") or ','
-        csv_model = {"delimiter": delimiter,
-                     "timeformat": timeformat,
-                     "datecol": int(datecolumn),
-                     "sumcol": int(sumcolumn),
-                     "descol": int(desc_column),
-                     "decimal": decimal_sep}
-        print()
-        print("------------------------")
-        print(f"Pankkimalli {nimi}:")
-        for key, value in csv_model.items():
-            print(f"{key} : {value}")
-        tallenna = input("Tallenna k/e: ")
-        print("------------------------")
-        print()
-        if tallenna.lower() == 'k':
-            banks[nimi] = csv_model
+
+    while True:
+        if action:
+            print("Syötä uusi pankkimalli: ")
+            nimi = input("Pankin nimi: ")
+            delimiter = input("Kenttäerotin [,]: ") or ","
+            timeformat = input("Timeformat [%d.%m.%Y]: ") or "%d.%m.%Y"
+            datecolumn = input("Päivämäärän sarake [0]: ") or 0
+            sumcolumn = input("Summan sarake [2]: ") or 2
+            desc_column = input("Kuvauksen sarake [1]: ") or 1
+            decimal_sep = input("Desimaalierotin [,]: ") or ','
+            try:
+                csv_model = {"delimiter": delimiter,
+                             "timeformat": timeformat,
+                             "datecol": int(datecolumn),
+                             "sumcol": int(sumcolumn),
+                             "descol": int(desc_column),
+                             "decimal": decimal_sep}
+                print()
+                print("------------------------")
+                print(f"Pankkimalli {nimi}:")
+                for key, value in csv_model.items():
+                    print(f"{key} : {value}")
+                tallenna = input("Tallenna k/e: ")
+                print("------------------------")
+                print()
+                if tallenna.lower() == 'k':
+                    banks[nimi] = csv_model
+                else:
+                    csv_model = False
+                    pass
+                break
+            except ValueError:
+                print("saraketietojen tulee olla kokonaislukuja!")
+                logger.error('ERROR USER INPUT WRONG DATATYPE')
+                continue
+
         else:
+            nro = input("Valitse poistettava pankkimalli: ")
+            try:
+                banks.pop(list(banks.keys())[int(nro)-1])
+                logger.debug(f"BANK REMOVED, index='{nro}")
+            except (IndexError, ValueError):
+                logger.error(f"INDEX NOT VALID index='{nro}'")
+                print("Anna validi numero!")
             csv_model = False
-            pass
-    else:
-        nro = input("Valitse poistettava pankkimalli: ")
-        banks.pop(list(banks.keys())[int(nro)-1])
-        csv_model = False
-    with open('banks.pkl', 'wb') as f:
-        pickle.dump(banks, f)
+
+    try:
+        with open('banks.pkl', 'wb') as f:
+            pickle.dump(banks, f)
+        logger.debug(f"BANK MODEL SAVING - PICKLE OK")
+    except FileNotFoundError:
+        logger.error(f"ERROR BANK PICKLE SAVING - NOT FOUND")
+        print("'banks.pkl' tiedostoa ei löydy")
 
     return csv_model
 

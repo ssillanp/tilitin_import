@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 file_handler = logging.FileHandler('tilitin_import.log')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
