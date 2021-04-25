@@ -1,7 +1,17 @@
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
+file_handler = logging.FileHandler('tilitin_import.log')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
 class bankinfo:
     """Luokka pankkikohtaisille asetuksille"""
     def __init__(self, binfo):
         self.set_values(bank)
+        logger.info('BankInfo CREATED')
         
     def set_values(self, bank):
         if bank == 'op':
@@ -28,6 +38,7 @@ class bankinfo:
 
     def user_defined(self):
         """Käyttäjän vapaasti määriteltävät pankki-csv asetukset"""
+        logger.info('bankInfo, USER DEF CREATED')
         delimiter = input("Kenttäerotin [,]:") or ","
         timeformat = input("Timeformat [%d.%m.%Y]:") or "%d.%m.%Y"
         datecolumn = input("Päivämäärän sarake [0]:") or 0

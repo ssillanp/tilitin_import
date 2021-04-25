@@ -1,8 +1,19 @@
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
+file_handler = logging.FileHandler('tilitin_import.log')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+
 class DbEntry:
     """Luokka vastaa kannan entry taulun rakennetta"""
 
     def __init__(self, entry_id, document_id, account_id, debit, amount, description, row_number):
+        logger.debug('DBENTRY ADDED')
         self.id = int(entry_id)
         self.document_id = int(document_id)
         self.account_id = int(account_id)
@@ -40,6 +51,7 @@ class DbDocument:
     """luokka vastaa kannan document taulun rakennetta"""
 
     def __init__(self, doc_id, number, period_id, doc_date):
+        logger.debug('DBDOC ADDED')
         self.id = int(doc_id)
         self.number = int(number)
         self.period_id = int(period_id)
@@ -57,8 +69,10 @@ class DbDocument:
         return "INSERT INTO document VALUES ({}, {}, {}, {})".format(self.id, self.number, self.period_id,
                                                                      self.doc_date)
     def __str__(self):
-        return f"{self.id} {self.number} {datetime.utcfromtimestamp(self.doc_date / 1000).strftime('%d.%m.%Y')} " \
-               f"{self.period_id}"
+        return f"{str(self.id).rjust(4)} " \
+               f"{str(self.number).rjust(3)} " \
+               f"{datetime.utcfromtimestamp(self.doc_date / 1000).strftime('%d.%m.%Y')} " \
+               f"{str(self.period_id).rjust(3)}"
 
     def __lt__(self, other):
         return self.doc_date < other.doc_date

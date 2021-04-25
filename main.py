@@ -19,6 +19,7 @@ import json
 import sqlite3
 import sys
 import logging
+import pickle
 from progress.bar import Bar
 from tilitindb import DbDocument, DbEntry, DbPeriod
 
@@ -56,7 +57,7 @@ def read_db(db_name):
         cursor.execute(f"SELECT number FROM document WHERE id={db_limits['last_document_id']}")
         db_limits['last_document_number'] = cursor.fetchone()[0]
         cursor.execute('SELECT max(id) FROM entry')
-        db_limits['last_entry_id'] = cursor.fetchone()[0]
+        db_limits['last_entry_id'] = cursor.fetchone()[0] or 0
         cursor.execute('SELECT * FROM period')
         periods = cursor.fetchall()
         for period in periods:
@@ -120,10 +121,10 @@ def get_tilit():
 
 def pankkimalli(action):
     try:
-        with open('bank_csv.json', 'r') as f:
-            banks = json.load(f)
+        with open('banks.pkl', 'rb') as f:
+            banks = pickle.load(f)
     except FileNotFoundError:
-        print("'bank_csv.json' tiedostoa ei löydy")
+        print("'banks.pkl' tiedostoa ei löydy")
         return None
     if action:
         print("Syötä uusi pankkimalli: ")
@@ -133,11 +134,13 @@ def pankkimalli(action):
         datecolumn = input("Päivämäärän sarake [0]: ") or 0
         sumcolumn = input("Summan sarake [2]: ") or 2
         desc_column = input("Kuvauksen sarake [1]: ") or 1
+        decimal_sep = input("Desimaalierotin [,]: ") or ','
         csv_model = {"delimiter": delimiter,
                      "timeformat": timeformat,
                      "datecol": int(datecolumn),
                      "sumcol": int(sumcolumn),
-                     "descol": int(desc_column)}
+                     "descol": int(desc_column),
+                     "decimal": decimal_sep}
         print()
         print("------------------------")
         print(f"Pankkimalli {nimi}:")
@@ -147,41 +150,39 @@ def pankkimalli(action):
         print("------------------------")
         print()
         if tallenna.lower() == 'k':
-            banks['banks'].append({nimi: [csv_model]})
+            banks[nimi] = csv_model
         else:
             csv_model = False
             pass
     else:
         nro = input("Valitse poistettava pankkimalli: ")
-        banks['banks'].pop(int(nro)-1)
+        banks.pop(list(banks.keys())[int(nro)-1])
         csv_model = False
-    with open('bank_csv.json', 'w') as f:
-        json.dump(banks, f, indent=2)
+    with open('banks.pkl', 'wb') as f:
+        pickle.dump(banks, f)
 
     return csv_model
 
 
 def select_bank():
-    bank_sel = {}
     csv_model = False
     while not csv_model:
         try:
-            with open('bank_csv.json', 'r') as f:
-                banks = json.load(f)
+            with open('banks.pkl', 'rb') as f:
+                banks = pickle.load(f)
         except FileNotFoundError:
             print("'bank_csv.json' tiedostoa ei löydy")
             return None
         print("Löytyi seuraavat csv mallit:  ")
         print('------------------------------')
-        for i, bank in enumerate(banks['banks']):
-            bank_sel[i + 1] = list(bank.keys())[0]
-            print(f"{i + 1} - {bank_sel[i+1]}")
+        for i, key in enumerate(list(banks.keys())):
+            print(f"{i + 1} - {key}")
         print()
         print("u - syötä uusi, d - poista")
         print('------------------------------')
         print("Valitse malli")
         valinta = input("Valitse: ")
-        for i in range(1, len(bank_sel) + 1):
+        for i in range(1, len(banks.items()) + 1):
             if valinta.lower() == 'u':
                 csv_model = pankkimalli(True)
                 break
@@ -189,30 +190,44 @@ def select_bank():
                 csv_model = pankkimalli(False)
                 break
             elif int(valinta) == i:
-                csv_model = banks['banks'][i-1][bank_sel[i]][0]
+                csv_model = banks[list(banks.keys())[i - 1]]
+                # print(csv_model)
                 break
     return csv_model
 
 
 def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
     docs = []
-    # print(csv_model)
+    print(db_limits)
     for d, tapahtuma in enumerate(csv_data[1:]):
         # print(tapahtuma)
         doc_date = int(time.mktime(datetime.datetime.strptime(f"{tapahtuma[csv_model['datecol']]}",
                                                               csv_model['timeformat']).timetuple()) * 1000)
         docs.append(DbDocument(db_limits['last_document_id'] + d + 1,  db_limits['last_document_number'] + d + 1,
                                db_limits['last_period_id'], doc_date))
-        if tapahtuma[csv_model['sumcol']].startswith('-'):
+        tapahtuma_sum = tapahtuma[csv_model['sumcol']].replace(csv_model['decimal'], '.')\
+            .replace('"', '').replace(' ', '')
+        tapahtuma_sum = float(tapahtuma_sum)
+        if tapahtuma_sum < 0:
             debit = False
         else:
             debit = True
-        docs[-1].add_entry(DbEntry(db_limits['last_entry_id'] + d * 2 + 1, docs[-1].id, vientitili,
-                                   debit, abs(float(tapahtuma[csv_model['sumcol']])),
-                                   tapahtuma[csv_model['descol']], 1))
-        docs[-1].add_entry(DbEntry(db_limits['last_entry_id'] + d * 2 + 2, docs[-1].id, vastatili,
-                                   not debit, abs(float(tapahtuma[csv_model['sumcol']])),
-                                   tapahtuma[csv_model['descol']], 2))
+        docs[-1].add_entry(DbEntry(db_limits['last_entry_id'] + d * 2 + 1,
+                                   docs[-1].id,
+                                   vientitili,
+                                   debit,
+                                   abs(tapahtuma_sum),
+                                   tapahtuma[csv_model['descol']],
+                                   1
+                                   ))
+        docs[-1].add_entry(DbEntry(db_limits['last_entry_id'] + d * 2 + 2,
+                                   docs[-1].id,
+                                   vastatili,
+                                   not debit,
+                                   abs(tapahtuma_sum),
+                                   tapahtuma[csv_model['descol']],
+                                   2
+                                   ))
 
     return docs
 
@@ -220,17 +235,18 @@ def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
 def kirjoita_kantaan(docs_to_add, db_name):
     with sqlite3.connect(db_name) as tilitin_db:
         cursor = tilitin_db.cursor()
-        with Bar("Kirjoitetaan...", max=len(docs_to_add)*3) as bar:
+        max_bar = len(docs_to_add)*3
+        with Bar("Kirjoitetaan...", max=max_bar) as bar:
             for itm in docs_to_add:
                 cursor.execute(itm.sql_str)
                 # print(itm.sql_str)
                 bar.next()
-                time.sleep(0.1)
+                time.sleep(1 / max_bar)
                 for ent in itm.entries:
                     cursor.execute(ent.sql_str)
                     # print(ent.sql_str)
                     bar.next()
-                    time.sleep(0.1)
+                    time.sleep(1 / max_bar)
                 # time.sleep(0.2)
             tilitin_db.commit()
     print()
@@ -245,12 +261,13 @@ def main():
     # vientitili, vastatili = get_tilit()
 
     docs_to_add = create_new_items(csv_data, csv_model, db_limits, vientitili_id, vastatili_id)
-    print("ENT DOC ROW ACC DEB        SUM  DESC")
-    print("-------------------------------------------------------")
+    print(" DOC DNO    DATE    PER ENT DOC ROW ACC DEB        SUM  DESC")
+    print("-----------------------------------------------------------------------------------")
     for item in docs_to_add:
+        # print(item)
         for ent in item.entries:
-            print(ent)
-    print("-------------------------------------------------------")
+            print(f"{item} {ent}")
+    print("-----------------------------------------------------------------------------------")
     print()
     while True:
         kirjoitus = input("Kirjoitetaanko tiedot kantaan ? k/e : ")
