@@ -15,7 +15,6 @@ import codecs
 import csv
 import datetime
 import time
-import json
 import sqlite3
 import sys
 import logging
@@ -25,7 +24,7 @@ from tilitindb import DbDocument, DbEntry, DbPeriod
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 file_handler = logging.FileHandler('tilitin_import.log')
 file_handler.setFormatter(formatter)
@@ -37,10 +36,11 @@ def parse_args():
     :return: database filename as db_name, csv filename as csv_name
     """
     args = sys.argv[1:]
+    print(args)
     if len(args) == 2:
         db_name = str(args[0])
         csv_name = str(args[1])
-        logger.info('ARGS OK')
+        logger.debug('ARGS OK')
     else:
         print("Usage: python3 tilitin_import.py [database] [csv]")
         logger.error('PROBLEM ARGS')
@@ -76,16 +76,21 @@ def read_db(db_name):
             db_limits['last_period_id'] = db_periods[-1].id
             db_limits['last_period_year'] = datetime.datetime.utcfromtimestamp(db_periods[-1].endDate / 1000).strftime('%Y')
             print(db_limits)
-            cursor.execute(f"SELECT id FROM account WHERE number={vientitili}")
+            tili = vientitili
+            cursor.execute(f"SELECT id FROM account WHERE number={tili}")
             vientitili_id = cursor.fetchone()[0]
-            cursor.execute(f"SELECT id FROM account WHERE number={vastatili}")
+            tilti = vastatili
+            cursor.execute(f"SELECT id FROM account WHERE number={tili}")
             vastatili_id = cursor.fetchone()[0]
             logger.debug('DB OK - read_db()')
     except sqlite3.OperationalError:
         logger.error(f'DB ERROR (read_db()) db:{db_name}')
         print(f"Tietokantaa '{db_name} ei voitu avata, tai tietokanta ei ole tilitin-kanta")
         sys.exit(0)
-
+    except TypeError:
+        logger.error(f"ERROR PARSING ACC acc:'{tili}'")
+        print(f"Tilinumeroa:'{tili}' ei löydy ")
+        sys.exit(0)
     return db_limits, db_periods, vientitili_id, vastatili_id
 
 
@@ -95,7 +100,6 @@ def read_bank_csv(csv_name, csv_model):
     :param csv_model: bank model of the selected csv
     :return: data from the csv as csv_data (list)
     """
-    csv_name = ""
     try:
         with codecs.open(csv_name, encoding='unicode_escape') as csvfile:
             csv_data = list(csv.reader(csvfile, delimiter=csv_model['delimiter']))
@@ -225,11 +229,12 @@ def pankkimalli(action):
             nro = input("Valitse poistettava pankkimalli: ")
             try:
                 banks.pop(list(banks.keys())[int(nro)-1])
-                logger.debug(f"BANK REMOVED, index='{nro}")
+                logger.debug(f"BANK REMOVED, index='{nro}'")
+                csv_model = False
+                break
             except (IndexError, ValueError):
                 logger.error(f"INDEX NOT VALID index='{nro}'")
                 print("Anna validi numero!")
-            csv_model = False
 
     try:
         with open('banks.pkl', 'wb') as f:
@@ -243,14 +248,21 @@ def pankkimalli(action):
 
 
 def select_bank():
+    """ Function prints available bank csv model and asks user a model number
+    :return: selected model as csv_model (dict)
+    """
     csv_model = False
+
+    try:
+        with open('banks.pkl', 'rb') as f:
+            banks = pickle.load(f)
+            logger.debug("BANKS LOAD PICKLE OK")
+    except FileNotFoundError:
+        logger.error("BANKS LOAD PKL NOT FOUND")
+        print("'bank_csv.json' tiedostoa ei löydy")
+        return None
+
     while not csv_model:
-        try:
-            with open('banks.pkl', 'rb') as f:
-                banks = pickle.load(f)
-        except FileNotFoundError:
-            print("'bank_csv.json' tiedostoa ei löydy")
-            return None
         print("Löytyi seuraavat csv mallit:  ")
         print('------------------------------')
         for i, key in enumerate(list(banks.keys())):
@@ -260,45 +272,67 @@ def select_bank():
         print('------------------------------')
         print("Valitse malli")
         valinta = input("Valitse: ")
-        for i in range(1, len(banks.items()) + 1):
+        try:
             if valinta.lower() == 'u':
                 csv_model = pankkimalli(True)
-                break
             elif valinta.lower() == 'd':
                 csv_model = pankkimalli(False)
-                break
-            elif int(valinta) == i:
-                csv_model = banks[list(banks.keys())[i - 1]]
+            elif int(valinta) > len(banks.keys()):
+                logger.error(f"INVALID USER INPUT - csv-model input:'{valinta}'")
+                print("Anna validi numero, u tai d ")
+                csv_model = False
+            else:
+                csv_model = banks[list(banks.keys())[int(valinta) - 1]]
                 # print(csv_model)
-                break
+        except ValueError:
+            logger.error(f"INVALID USER INPUT - csv-model input:'{valinta}'")
+            print("Anna validi numero, u tai d ")
     return csv_model
 
 
-def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
+def create_new_items(csv_data, csv_model, db_limits, vientitili_id, vastatili_id):
+    """ Function creates new items DbDocument and DBEntry to be injected into database
+    :param csv_data: items from csv as csv_data (list)
+    :param csv_model: selected csv model as csv_model (dict)
+    :param db_limits: db info as db_limits (dict)
+    :param vientitili_id: debit account id as vientitili_id (int)
+    :param vastatili_id: credit account id as vastatili_id (int)
+    :return: list of created items as docs (list)
+    """
     docs = []
-    # print(db_limits)
+    # loop through csv_data skipping the header row
     for d, tapahtuma in enumerate(csv_data[1:]):
-        # print(tapahtuma)
+        # parse the year of each csv item
         tapahtuma_year  = datetime.datetime.strptime(tapahtuma[csv_model['datecol']], csv_model['timeformat']).year
+        # Check that the year matches the year of the selcted period and trash if not
         if tapahtuma_year != int(db_limits['last_period_year']):
             print(f"{tapahtuma[csv_model['datecol']]} : {tapahtuma[csv_model['sumcol']]} : {tapahtuma[csv_model['descol']]}"
                   f" ei ole vienti-tilikaudella, skipataan...")
             input("Paina enter jatkaaksesi...")
             continue
+        # Parse the date to match db date format (ts * 1000)
         doc_date = int(time.mktime(datetime.datetime.strptime(f"{tapahtuma[csv_model['datecol']]}",
                                                               csv_model['timeformat']).timetuple()) * 1000)
+        # Add a document item to docs list as DbDocument object
         docs.append(DbDocument(db_limits['last_document_id'] + d + 1,  db_limits['last_document_number'] + d + 1,
                                db_limits['last_period_id'], doc_date))
+        # Parse the sum from csv item (remove whitespaces, match the decimal separator)
         tapahtuma_sum = tapahtuma[csv_model['sumcol']].replace(csv_model['decimal'], '.')\
             .replace('"', '').replace(' ', '')
-        tapahtuma_sum = float(tapahtuma_sum)
+        # Change sum datatype to float
+        try:
+            tapahtuma_sum = float(tapahtuma_sum)
+        except ValueError:
+            print(f"Ongelma CSV datan parsimisessa. summa väärää muotoa '{tapahtuma_sum}'")
+            logger.error(f"CSV SUM ERROR sum:'{tapahtuma_sum}")
+            sys.exit(0)
         if tapahtuma_sum < 0:
             debit = False
         else:
             debit = True
         docs[-1].add_entry(DbEntry(db_limits['last_entry_id'] + d * 2 + 1,
                                    docs[-1].id,
-                                   vientitili,
+                                   vientitili_id,
                                    debit,
                                    abs(tapahtuma_sum),
                                    tapahtuma[csv_model['descol']],
@@ -306,37 +340,53 @@ def create_new_items(csv_data, csv_model, db_limits, vientitili, vastatili):
                                    ))
         docs[-1].add_entry(DbEntry(db_limits['last_entry_id'] + d * 2 + 2,
                                    docs[-1].id,
-                                   vastatili,
+                                   vastatili_id,
                                    not debit,
                                    abs(tapahtuma_sum),
                                    tapahtuma[csv_model['descol']],
                                    2
                                    ))
-
+    logger.debug(f"ADDED {len(docs)} DOCS, {len(docs) * 2} ENTRIES")
     return docs
 
 
 def kirjoita_kantaan(docs_to_add, db_name):
-    with sqlite3.connect(db_name) as tilitin_db:
-        cursor = tilitin_db.cursor()
-        max_bar = len(docs_to_add)*3
-        with Bar("Kirjoitetaan...", max=max_bar) as bar:
-            for itm in docs_to_add:
-                cursor.execute(itm.sql_str)
-                # print(itm.sql_str)
-                bar.next()
-                time.sleep(1 / max_bar)
-                for ent in itm.entries:
-                    cursor.execute(ent.sql_str)
-                    # print(ent.sql_str)
+    """ Function writes csv data into db
+    :param docs_to_add: The data to ass as docs_to_add (list)
+    :param db_name: filename of the db to add to
+    :return: None
+    """
+    try:
+        with sqlite3.connect(db_name) as tilitin_db:
+            cursor = tilitin_db.cursor()
+            max_bar = len(docs_to_add)*3
+            with Bar("Kirjoitetaan...", max=max_bar) as bar:
+                for itm in docs_to_add:
+                    cursor.execute(itm.sql_str)
+                    # print(itm.sql_str)
                     bar.next()
                     time.sleep(1 / max_bar)
-                # time.sleep(0.2)
-            tilitin_db.commit()
+                    for ent in itm.entries:
+                        cursor.execute(ent.sql_str)
+                        # print(ent.sql_str)
+                        bar.next()
+                        time.sleep(1 / max_bar)
+                    # time.sleep(0.2)
+                tilitin_db.commit()
+    except sqlite3.OperationalError:
+        logger.error(f'DB ERROR (kirjoita_kantaan()), db:{db_name}')
+        print(f"Tietokantaa '{db_name} ei voitu avata, tai tietokanta ei ole tilitin-kanta")
+        sys.exit(0)
+
     print()
+    return None
 
 
 def main():
+    """ Main Loop
+    :return: None
+    """
+    logger.info("STARTED")
     db_name, csv_name = parse_args()
     csv_model = select_bank()
     csv_data = read_bank_csv(csv_name, csv_model)
@@ -362,6 +412,7 @@ def main():
             break
         else:
             print('Valintse k/e : ')
+    logger.info("FINISHED")
 
 
 if __name__ == '__main__':
