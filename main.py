@@ -421,7 +421,7 @@ def main():
         elif kirjoitus.lower() == 'e':
             break
         else:
-            print('Valintse k/e : ')
+            print('Valitse k/e : ')
     logger.info("FINISHED")
 
 
