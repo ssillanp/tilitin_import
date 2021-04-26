@@ -2,22 +2,23 @@
 
 Käyttö:
 
-`python3 tilitin_import.py [tilitin_tietokanta.sqlite] [tapahtumat_csv.csv]`
+> python3 tilitin_import.py [tilitin_tietokanta.sqlite] [tapahtumat_csv.csv]
 
 Luetaan valmiit pankkien csv mallit:
 
 
-```
-Löytyi seuraavat csv mallit:
-------------------------------
-1 - op
-2 - danske
 
-u - syötä uusi, d - poista
-------------------------------
-Valitse malli
-Valitse: 
-```
+>Löytyi seuraavat csv mallit:  
+>------------------------------ 
+>1 - op  
+>2 - danske   
+>  
+>u - syötä uusi, d - poista  
+>------------------------------  
+>Valitse malli
+>Valitse: 
+
+
 Valitse malli tai syötä uusi (u) tai poista olemassa oleva (d):
 
 ```
