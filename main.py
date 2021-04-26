@@ -20,33 +20,33 @@ import sys
 import os
 import logging
 import pickle
+import argparse
 from progress.bar import Bar
 from tilitindb import DbDocument, DbEntry, DbPeriod
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 file_handler = logging.FileHandler('tilitin_import.log')
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
+parser = argparse.ArgumentParser()
+parser.add_argument("dbName", help="Name of the tilitin database")
+parser.add_argument("csvName", help="Name of the csvfile")
+parser.add_argument("-l", "--loglevel", help="sets the logging level",
+                    type=str, choices=['debug', 'info', 'warning', 'error', 'critical'],
+                    default='warning')
 
-def parse_args():
-    """ Funktion parses arguments from command
-    :return: database filename as db_name, csv filename as csv_name
-    """
-    args = sys.argv[1:]
-    # print(args)
-    if len(args) == 2:
-        db_name = str(args[0])
-        csv_name = str(args[1])
-        logger.debug('ARGS OK')
-    else:
-        print("Usage: python3 tilitin_import.py [database] [csv]")
-        logger.error('PROBLEM ARGS')
-        sys.exit(0)
-    return db_name, csv_name
+args = parser.parse_args()
+loglevels = {'debug': logging.DEBUG,
+             'info': logging.INFO,
+             'warning': logging.WARNING,
+             'error': logging.ERROR,
+             'critical': logging.CRITICAL}
+
+logger.setLevel(loglevels[args.loglevel])
+# print(logger.level)
 
 
 def read_db(db_name):
@@ -395,7 +395,8 @@ def main():
     """
     os.system('clear')
     logger.info("STARTED")
-    db_name, csv_name = parse_args()
+    db_name = args.dbName
+    csv_name = args.csvName
     csv_model = select_bank()
     csv_data = read_bank_csv(csv_name, csv_model)
     db_limits, db_periods, vientitili_id, vastatili_id = read_db(db_name)
