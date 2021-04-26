@@ -71,17 +71,17 @@ Uudet tapahtumat lisätään tilikaudelle 1
 Jatka k/e [k]: k
 ```
 
-Tulostetaan rivit wennen kantaan vientiä
-DOC = DokumenttiId kannassa
-DNO = Dokumenttinumero
-DATE = Tapahtumapäivä
-PER = Tilikauden Id
-ENT = Viennin Id
-ROW = Viennin dokumenttirivi
-ACC = TilinId
-DEB = 0 jos rahaa ulos, 1 jos sisään.
-SUM = Summa
-DESC = Kuvaus
+Tulostetaan rivit wennen kantaan vientiä  
+DOC = DokumenttiId kannassa  
+DNO = Dokumenttinumero  
+DATE = Tapahtumapäivä  
+PER = Tilikauden Id  
+ENT = Viennin Id  
+ROW = Viennin dokumenttirivi  
+ACC = TilinId  
+DEB = 0 jos rahaa ulos, 1 jos sisään.  
+SUM = Summa  
+DESC = Kuvaus  
 
 
 ```
