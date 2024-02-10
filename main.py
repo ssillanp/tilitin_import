@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 # encoding: 'utf-8'
-# Verion update
-
+# Fixed issues
 
 __author__ = "Sami Sillanpää"
 __copyright__ = "Copyright 2021, (c) Sami Sillanpää"
@@ -107,11 +106,13 @@ def read_bank_csv(csv_name, csv_model):
         with codecs.open(csv_name, encoding='unicode_escape') as csvfile:
             csv_data = list(csv.reader(csvfile, delimiter=csv_model['delimiter']))
         logger.debug('csv OK')
-        return csv_data
+        # print(csv_data)        return csv_data
     except FileNotFoundError:
         logger.error(f"CSV ERROR, csv:'{csv_name}'")
         print(f"Tapahtumatiedostoa {csv_name} ei ole")
         sys.exit(0)
+        
+    return csv_data
 
 
 def get_account_id(db_name, account_no):
@@ -263,7 +264,7 @@ def select_bank():
     csv_model = False
 
     try:
-        with open('banks.pkl', 'rb') as f:
+        with open('/home/sami/Documents/SVTK/tilitin_import/banks.pkl', 'rb') as f:
             banks = pickle.load(f)
             logger.debug("BANKS LOAD PICKLE OK")
     except FileNotFoundError:
@@ -310,7 +311,8 @@ def create_new_items(csv_data, csv_model, db_limits, vientitili_id, vastatili_id
     """
     docs = []
     # loop through csv_data skipping the header row
-    for d, tapahtuma in enumerate(csv_data[1:]):
+    csv_data = sorted(csv_data[1:], key=lambda data_date: datetime.datetime.strptime(data_date[0], '%d.%m.%Y'))
+    for d, tapahtuma in enumerate(csv_data):
         # parse the year of each csv item
         tapahtuma_year  = datetime.datetime.strptime(tapahtuma[csv_model['datecol']], csv_model['timeformat']).year
         # Check that the year matches the year of the selcted period and trash if not
